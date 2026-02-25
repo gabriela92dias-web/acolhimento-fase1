@@ -47,38 +47,35 @@
       const cardClass = isEncerrado ? 'atendimento encerrado' : 'atendimento';
       const statusClass = isEncerrado ? 'status encerrado' : 'status';
       const encerradoHtml = a.data_encerrado
-        ? `<p>Encerrado: ${new Date(a.data_encerrado).toLocaleString('pt-BR')}</p>`
+        ? '<p>Encerrado: ' + new Date(a.data_encerrado).toLocaleString('pt-BR') + '</p>'
         : '';
       const btnHtml = !isEncerrado
-        ? `<button class="btn" type="button" data-id="${a.id}">Encerrar atendimento</button>`
+        ? '<button class="btn" type="button" data-id="' + a.id + '">Encerrar atendimento</button>'
         : '';
-      root.innerHTML = `
-        <div class="${cardClass}">
-          <p><strong>${a.nome || '—'}</strong></p>
-          <p>${a.telefone || '—'}</p>
-          <p class="${statusClass}">Status: ${a.status}</p>
-          <p>Início: ${a.data_inicio ? new Date(a.data_inicio).toLocaleString('pt-BR') : '—'}</p>
-          ${encerradoHtml}
-          ${btnHtml}
-        </div>
-      `;
-      const btn = root.querySelector('.btn');
-      if (btn) btn.addEventListener('click', () => encerrarAtendimento(btn.dataset.id));
+      root.innerHTML =
+        '<div class="' + cardClass + '">' +
+        '<p><strong>' + (a.nome || '—') + '</strong></p>' +
+        '<p>' + (a.telefone || '—') + '</p>' +
+        '<p class="' + statusClass + '">Status: ' + a.status + '</p>' +
+        '<p>Início: ' + (a.data_inicio ? new Date(a.data_inicio).toLocaleString('pt-BR') : '—') + '</p>' +
+        encerradoHtml + btnHtml + '</div>';
+      var btn = root.querySelector('.btn');
+      if (btn) btn.addEventListener('click', function() { encerrarAtendimento(btn.dataset.id); });
     }
 
     async function encerrarAtendimento(id) {
       try {
-        const res = await fetch(`${API}/api/atendimentos/${id}`, {
+        var res = await fetch(API + '/api/atendimentos/' + id, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: 'encerrado' }),
         });
         if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
+          var data = await res.json().catch(function() { return {}; });
           alert(data.erro || 'Erro ao encerrar.');
           return;
         }
-        const data = await res.json();
+        var data = await res.json();
         renderAtendimento(data);
       } catch (e) {
         alert('Falha ao encerrar.');
@@ -86,36 +83,35 @@
     }
 
     function renderErro(msg) {
-      document.getElementById('root').innerHTML = `<p class="erro">${msg}</p>`;
+      document.getElementById('root').innerHTML = '<p class="erro">' + msg + '</p>';
     }
 
     async function init() {
-      const path = getPath();
+      var path = getPath();
 
-      // Rota: /atendimento/auto?kommoContactId=...&nome=...&telefone=...
       if (path === '/atendimento/auto' || path === '/atendimento/auto/') {
-        const params = getParams();
-        const kommoContactId = params.kommoContactId;
+        var params = getParams();
+        var kommoContactId = params.kommoContactId;
         if (!kommoContactId) {
           renderErro('Parâmetro kommoContactId é obrigatório na URL.');
           return;
         }
         try {
-          const res = await fetch(`${API}/api/atendimentos/auto`, {
+          var res = await fetch(API + '/api/atendimentos/auto', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              kommoContactId,
+              kommoContactId: kommoContactId,
               nome: params.nome || '',
               telefone: params.telefone || '',
             }),
           });
-          const data = await res.json();
+          var data = await res.json();
           if (!res.ok) {
             renderErro(data.erro || 'Erro ao criar/obter atendimento.');
             return;
           }
-          window.location.replace(`${window.location.origin}/atendimentos/${data.id}`);
+          window.location.replace(window.location.origin + '/atendimentos/' + data.id);
           return;
         } catch (e) {
           renderErro('Falha ao chamar a API. Verifique se o servidor está rodando.');
@@ -123,17 +119,16 @@
         }
       }
 
-      // Rota: /atendimentos/:id
-      const match = path.match(/^\/atendimentos\/([^/]+)$/);
+      var match = path.match(/^\/atendimentos\/([^/]+)$/);
       if (match) {
-        const id = match[1];
+        var id = match[1];
         try {
-          const res = await fetch(`${API}/api/atendimentos/${id}`);
+          var res = await fetch(API + '/api/atendimentos/' + id);
           if (res.status === 404) {
             renderErro('Atendimento não encontrado.');
             return;
           }
-          const data = await res.json();
+          var data = await res.json();
           renderAtendimento(data);
           return;
         } catch (e) {
@@ -142,10 +137,9 @@
         }
       }
 
-      document.getElementById('root').innerHTML = `
-        <p>Fluxo automático (Fase 1) + Controle de status (Fase 2).</p>
-        <p>Use: <code>/atendimento/auto?kommoContactId=123&nome=...&telefone=...</code></p>
-      `;
+      document.getElementById('root').innerHTML =
+        '<p>Fluxo automático (Fase 1) + Controle de status (Fase 2).</p>' +
+        '<p>Use: <code>/atendimento/auto?kommoContactId=123&nome=...&telefone=...</code></p>';
     }
 
     init();

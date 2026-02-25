@@ -76,12 +76,19 @@ app.patch('/api/atendimentos/:id', (req, res) => {
   res.json(a);
 });
 
-// Frontend: arquivos estáticos + fallback SPA
+// widget.html e index.html na raiz (para deploy sem pasta public no repo)
+app.get('/widget.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'widget.html'));
+});
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).end();
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3333;
