@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abrir no Acolhimento</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f8f9fa;
+      min-height: 100%;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      background: #2a7;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+    .btn:hover { background: #248; }
+    .btn:disabled { background: #999; cursor: not-allowed; }
+    p.hint { font-size: 0.75rem; color: #666; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <a id="btn" class="btn" href="#" target="_blank">Abrir no Acolhimento</a>
+  <p id="hint" class="hint"></p>
+
+  <script>
+    (function() {
+      var params = {};
+      window.location.search.slice(1).split('&').forEach(function(pair) {
+        var i = pair.indexOf('=');
+        if (i > 0) {
+          params[decodeURIComponent(pair.slice(0, i))] = decodeURIComponent(pair.slice(i + 1));
+        }
+      });
+
+      // Aceita vários nomes de parâmetro (Kommo pode usar nomes diferentes)
+      var contactId = params.kommoContactId || params.contact_id || params.contact_id || params.id || '';
+      var nome = params.nome || params.name || params.contact_name || '';
+      var telefone = params.telefone || params.phone || params.contact_phone || '';
+
+      var base = window.location.origin;
+      var q = 'kommoContactId=' + encodeURIComponent(contactId) + '&nome=' + encodeURIComponent(nome) + '&telefone=' + encodeURIComponent(telefone);
+      var url = base + '/atendimento/auto?' + q;
+
+      var btn = document.getElementById('btn');
+      var hint = document.getElementById('hint');
+
+      if (contactId) {
+        btn.href = url;
+        hint.textContent = 'Abre o atendimento deste contato no sistema de acolhimento.';
+      } else {
+        btn.href = '#';
+        btn.classList.add('disabled');
+        btn.onclick = function(e) { e.preventDefault(); };
+        hint.textContent = 'Configure a URL do widget no Kommo com os parâmetros: contact_id (ou kommoContactId), nome, telefone.';
+      }
+    })();
+  </script>
+</body>
+</html>
