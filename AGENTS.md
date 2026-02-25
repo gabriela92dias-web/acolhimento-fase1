@@ -4,7 +4,7 @@
 
 ### Overview
 
-**Acolhimento** is a single-service Node.js/Express application for customer intake management, designed to integrate with Kommo CRM. It uses in-memory storage (no database required).
+**Acolhimento** is a single-service Node.js/Express application for customer intake management, integrated with Kommo CRM. It uses in-memory storage (no database required). Deployed to Render at `https://acolhimento-fase1.onrender.com`.
 
 ### Running the application
 
@@ -19,14 +19,22 @@ Server starts on `http://localhost:3333` (configurable via `PORT` env var).
 | Route | Description |
 |---|---|
 | `GET /` | Main app (index.html) |
-| `GET /widget.html` | Kommo CRM embeddable widget |
-| `POST /api/atendimentos/auto` | Create/return active atendimento |
+| `GET /widget.html` | Kommo CRM embeddable widget (shows atendimento inline, encerrar/reabrir) |
+| `GET /gadget.html` | Floating gadget overlay (FAB button + sliding panel with live timer) |
+| `GET /dashboard` | KPI dashboard (totals, period stats, bar chart, table) |
+| `POST /api/atendimentos/auto` | Create/return active atendimento for a Kommo contact |
+| `GET /api/atendimentos` | List all atendimentos (with `?status=ativo\|encerrado` filter) |
 | `GET /api/atendimentos/:id` | Get atendimento by ID |
-| `PATCH /api/atendimentos/:id` | Update atendimento status |
+| `PATCH /api/atendimentos/:id` | Update atendimento status (`ativo` or `encerrado`) |
+
+### Kommo integration
+
+The `kommo-widget/` directory contains the Kommo Widget SDK package. The pre-built ZIP (`acolhimento-widget.zip`) can be uploaded via **Configurações > Integrações > Criar Integração** in Kommo. The widget renders an iframe of `widget.html` in contact/lead card sidebars (`ccard-1`, `lcard-1`). The `base_url` setting must point to the deployed server URL.
 
 ### Notes
 
-- No linter, test framework, or build step is configured in this project. The `package.json` only has `start` and `dev` scripts (both run `node server.js`).
+- No linter, test framework, or build step is configured. `package.json` only has `start` and `dev` scripts (both run `node server.js`).
 - Data is stored in-memory and is lost on server restart.
-- No lockfile (`package-lock.json`) is committed; `npm install` generates one locally.
+- `package-lock.json` is committed; run `npm install` to restore dependencies.
 - The frontend is vanilla HTML/JS served directly by Express — no transpilation or bundling needed.
+- All widget/gadget pages accept query params: `kommoContactId`, `nome`, `telefone` (also `contact_id`, `name`, `phone` aliases).
