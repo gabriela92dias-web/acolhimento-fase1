@@ -98,6 +98,9 @@ app.patch('/api/atendimentos/:id', (req, res) => {
 app.get('/widget.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'widget.html'));
 });
+app.get('/gadget.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'gadget.html'));
+});
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acolhimento — Gadget</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: transparent;
+      color: #333;
+      font-size: 13px;
+    }
+
+    .gadget-fab {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #2a7;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, background 0.2s;
+      z-index: 9999;
+    }
+    .gadget-fab:hover { transform: scale(1.08); background: #248; }
+    .gadget-fab svg { width: 22px; height: 22px; fill: #fff; }
+
+    .gadget-fab .notif-dot {
+      position: absolute;
+      top: 2px; right: 2px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: #22c55e;
+      border: 2px solid #fff;
+    }
+    .gadget-fab .notif-dot.encerrado { background: #94a3b8; }
+
+    .gadget-panel {
+      position: fixed;
+      bottom: 74px;
+      right: 16px;
+      width: 280px;
+      max-height: 400px;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+      overflow: hidden;
+      transform: scale(0.9) translateY(10px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      z-index: 9998;
+    }
+    .gadget-panel.open {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .panel-header {
+      background: #0f172a;
+      color: #fff;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-header .panel-title {
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .panel-header .panel-title svg { width: 16px; height: 16px; fill: #fff; }
+    .panel-close {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      padding: 2px;
+    }
+    .panel-close:hover { color: #fff; }
+
+    .panel-body { padding: 14px; }
+
+    .g-card { margin-bottom: 0; }
+
+    .g-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .g-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .g-dot.ativo { background: #22c55e; }
+    .g-dot.encerrado { background: #94a3b8; }
+    .g-nome { font-weight: 700; font-size: 14px; color: #1e293b; }
+
+    .g-info { margin-bottom: 12px; }
+    .g-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 12px;
+    }
+    .g-row:last-child { border-bottom: none; }
+    .g-label { color: #64748b; }
+    .g-value { font-weight: 500; color: #1e293b; text-align: right; }
+
+    .g-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .g-badge.ativo { background: #dcfce7; color: #16a34a; }
+    .g-badge.encerrado { background: #f1f5f9; color: #64748b; }
+
+    .g-btn {
+      display: block;
+      width: 100%;
+      padding: 9px 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.2s;
+      text-decoration: none;
+    }
+    .g-btn + .g-btn { margin-top: 6px; }
+    .g-btn-encerrar { background: #ef4444; color: #fff; }
+    .g-btn-encerrar:hover { background: #dc2626; }
+    .g-btn-reabrir { background: #2a7; color: #fff; }
+    .g-btn-reabrir:hover { background: #248; }
+    .g-btn-abrir { background: #f1f5f9; color: #475569; }
+    .g-btn-abrir:hover { background: #e2e8f0; }
+    .g-btn:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
+
+    .g-loading {
+      text-align: center;
+      padding: 20px;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+    .g-erro {
+      text-align: center;
+      padding: 14px;
+      color: #ef4444;
+      font-size: 12px;
+    }
+    .g-config {
+      text-align: center;
+      padding: 14px;
+      color: #64748b;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .g-config code {
+      background: #f1f5f9;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 10px;
+    }
+
+    .g-timer {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+      padding: 6px 0 10px;
+      font-variant-numeric: tabular-nums;
+    }
+    .g-timer-label {
+      text-align: center;
+      font-size: 10px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <button class="gadget-fab" id="fab" title="Acolhimento">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+    <span class="notif-dot" id="notifDot" style="display:none"></span>
+  </button>
+
+  <div class="gadget-panel" id="panel">
+    <div class="panel-header">
+      <span class="panel-title">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        Acolhimento
+      </span>
+      <button class="panel-close" id="panelClose">&times;</button>
+    </div>
+    <div class="panel-body" id="panelBody">
+      <div class="g-loading">Carregando…</div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var API = window.location.origin;
+      var fab = document.getElementById('fab');
+      var panel = document.getElementById('panel');
+      var panelBody = document.getElementById('panelBody');
+      var panelClose = document.getElementById('panelClose');
+      var notifDot = document.getElementById('notifDot');
+      var isOpen = false;
+      var atendimentoAtual = null;
+      var timerInterval = null;
+
+      var params = {};
+      window.location.search.slice(1).split('&').forEach(function(pair) {
+        var i = pair.indexOf('=');
+        if (i > 0) {
+          params[decodeURIComponent(pair.slice(0, i))] = decodeURIComponent(pair.slice(i + 1));
+        }
+      });
+
+      var contactId = params.kommoContactId || params.contact_id || params.id || '';
+      var nome = params.nome || params.name || params.contact_name || '';
+      var telefone = params.telefone || params.phone || params.contact_phone || '';
+
+      fab.addEventListener('click', function() {
+        isOpen = !isOpen;
+        panel.classList.toggle('open', isOpen);
+        if (isOpen && contactId) carregarAtendimento();
+      });
+      panelClose.addEventListener('click', function() {
+        isOpen = false;
+        panel.classList.remove('open');
+      });
+
+      function formatDate(iso) {
+        if (!iso) return '—';
+        return new Date(iso).toLocaleString('pt-BR');
+      }
+
+      function calcDuracao(inicio) {
+        var diff = Math.floor((Date.now() - new Date(inicio).getTime()) / 1000);
+        if (diff < 0) diff = 0;
+        var h = Math.floor(diff / 3600);
+        var m = Math.floor((diff % 3600) / 60);
+        var s = diff % 60;
+        return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+      }
+
+      function atualizarTimer() {
+        var el = document.getElementById('gTimer');
+        if (el && atendimentoAtual && atendimentoAtual.status === 'ativo') {
+          el.textContent = calcDuracao(atendimentoAtual.data_inicio);
+        }
+      }
+
+      function render(a) {
+        atendimentoAtual = a;
+        var isEncerrado = a.status === 'encerrado';
+        var statusClass = isEncerrado ? 'encerrado' : 'ativo';
+        var statusLabel = isEncerrado ? 'Encerrado' : 'Ativo';
+
+        notifDot.style.display = 'block';
+        notifDot.className = 'notif-dot ' + statusClass;
+
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+
+        var html = '<div class="g-card">';
+
+        html +=
+          '<div class="g-header">' +
+            '<span class="g-dot ' + statusClass + '"></span>' +
+            '<span class="g-nome">' + (a.nome || 'Contato ' + a.kommoContactId) + '</span>' +
+          '</div>';
+
+        if (!isEncerrado) {
+          html +=
+            '<div class="g-timer-label">Tempo de atendimento</div>' +
+            '<div class="g-timer" id="gTimer">' + calcDuracao(a.data_inicio) + '</div>';
+        }
+
+        html +=
+          '<div class="g-info">' +
+            '<div class="g-row"><span class="g-label">Telefone</span><span class="g-value">' + (a.telefone || '—') + '</span></div>' +
+            '<div class="g-row"><span class="g-label">Status</span><span class="g-value"><span class="g-badge ' + statusClass + '">' + statusLabel + '</span></span></div>' +
+            '<div class="g-row"><span class="g-label">Início</span><span class="g-value">' + formatDate(a.data_inicio) + '</span></div>' +
+            (isEncerrado ? '<div class="g-row"><span class="g-label">Encerrado</span><span class="g-value">' + formatDate(a.data_encerrado) + '</span></div>' : '') +
+          '</div>';
+
+        if (!isEncerrado) {
+          html += '<button class="g-btn g-btn-encerrar" id="gBtnEncerrar">Encerrar atendimento</button>';
+        } else {
+          html += '<button class="g-btn g-btn-reabrir" id="gBtnReabrir">Reabrir atendimento</button>';
+        }
+
+        html += '<a class="g-btn g-btn-abrir" href="' + API + '/atendimentos/' + a.id + '" target="_blank">Abrir ficha completa</a>';
+        html += '</div>';
+
+        panelBody.innerHTML = html;
+
+        if (!isEncerrado) {
+          timerInterval = setInterval(atualizarTimer, 1000);
+        }
+
+        var btnEnc = document.getElementById('gBtnEncerrar');
+        if (btnEnc) btnEnc.addEventListener('click', function() { atualizarStatus(a.id, 'encerrado'); });
+
+        var btnReab = document.getElementById('gBtnReabrir');
+        if (btnReab) btnReab.addEventListener('click', function() { atualizarStatus(a.id, 'ativo'); });
+      }
+
+      function renderErro(msg) {
+        panelBody.innerHTML = '<div class="g-erro">' + msg + '</div>';
+      }
+
+      async function atualizarStatus(id, novoStatus) {
+        var btn = panelBody.querySelector('.g-btn-encerrar, .g-btn-reabrir');
+        if (btn) { btn.disabled = true; btn.textContent = 'Atualizando…'; }
+
+        try {
+          var res = await fetch(API + '/api/atendimentos/' + id, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: novoStatus }),
+          });
+          if (!res.ok) {
+            var err = await res.json().catch(function() { return {}; });
+            alert(err.erro || 'Erro ao atualizar.');
+            carregarAtendimento();
+            return;
+          }
+          var data = await res.json();
+          render(data);
+        } catch (e) {
+          alert('Falha na conexão.');
+          carregarAtendimento();
+        }
+      }
+
+      async function carregarAtendimento() {
+        panelBody.innerHTML = '<div class="g-loading">Carregando…</div>';
+        try {
+          var res = await fetch(API + '/api/atendimentos/auto', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              kommoContactId: contactId,
+              nome: nome,
+              telefone: telefone,
+            }),
+          });
+          if (!res.ok) {
+            var err = await res.json().catch(function() { return {}; });
+            renderErro(err.erro || 'Erro ao carregar.');
+            return;
+          }
+          var data = await res.json();
+          render(data);
+        } catch (e) {
+          renderErro('Falha na conexão com o servidor.');
+        }
+      }
+
+      if (!contactId) {
+        panelBody.innerHTML =
+          '<div class="g-config">' +
+          'Configure a URL com os parâmetros:<br>' +
+          '<code>kommoContactId</code>, <code>nome</code>, <code>telefone</code>' +
+          '</div>';
+        return;
+      }
+
+      carregarAtendimento();
+    })();
+  </script>
+</body>
+</html>
