@@ -1,0 +1,24 @@
+{
+  "widget": {
+    "name": "acolhimento_widget",
+    "version": "1.0.0",
+    "interface_version": 2,
+    "description": "Widget de acolhimento para controle de atendimentos",
+    "init_once": false,
+    "locale": ["pt"],
+    "locations": [
+      "ccard-1",
+      "lcard-1"
+    ],
+    "settings": {
+      "base_url": {
+        "name": "URL do servidor",
+        "type": "text",
+        "required": true
+      }
+    },
+    "support": {
+      "link": "https://acolhimento-fase1.onrender.com"
+    }
+  }
+}

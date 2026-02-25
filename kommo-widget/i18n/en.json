@@ -1,0 +1,10 @@
+{
+  "widget": {
+    "name": "Acolhimento",
+    "short_description": "Service session control",
+    "description": "Widget to manage service sessions directly in Kommo contact and lead cards"
+  },
+  "settings": {
+    "base_url": "Server URL (e.g. https://acolhimento-fase1.onrender.com)"
+  }
+}

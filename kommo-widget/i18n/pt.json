@@ -1,0 +1,10 @@
+{
+  "widget": {
+    "name": "Acolhimento",
+    "short_description": "Controle de atendimentos",
+    "description": "Widget para gerenciar atendimentos diretamente nos cards de contato e lead do Kommo"
+  },
+  "settings": {
+    "base_url": "URL do servidor (ex: https://acolhimento-fase1.onrender.com)"
+  }
+}
