@@ -3,41 +3,128 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Abrir no Acolhimento</title>
+  <title>Acolhimento — Widget</title>
   <style>
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      margin: 0;
-      padding: 12px;
       font-family: system-ui, -apple-system, sans-serif;
       background: #f8f9fa;
-      min-height: 100%;
+      padding: 10px;
+      color: #333;
+      font-size: 13px;
     }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .header .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot.ativo { background: #22c55e; }
+    .dot.encerrado { background: #94a3b8; }
+    .header .titulo {
+      font-weight: 700;
+      font-size: 14px;
+      color: #1e293b;
+    }
+
+    .info { margin-bottom: 12px; }
+    .info .row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .info .row:last-child { border-bottom: none; }
+    .info .label { color: #64748b; }
+    .info .value { font-weight: 500; color: #1e293b; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .status-badge.ativo { background: #dcfce7; color: #16a34a; }
+    .status-badge.encerrado { background: #f1f5f9; color: #64748b; }
+
     .btn {
       display: block;
       width: 100%;
       padding: 10px 14px;
       border: none;
       border-radius: 8px;
-      background: #2a7;
-      color: #fff;
-      font-size: 0.9rem;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       text-align: center;
-      text-decoration: none;
+      transition: background 0.2s;
     }
-    .btn:hover { background: #248; }
-    .btn:disabled { background: #999; cursor: not-allowed; }
-    p.hint { font-size: 0.75rem; color: #666; margin-top: 8px; }
+    .btn-encerrar { background: #ef4444; color: #fff; }
+    .btn-encerrar:hover { background: #dc2626; }
+    .btn-reabrir { background: #2a7; color: #fff; margin-top: 6px; }
+    .btn-reabrir:hover { background: #248; }
+    .btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+    .btn-abrir {
+      background: #3b82f6;
+      color: #fff;
+      text-decoration: none;
+      margin-top: 6px;
+    }
+    .btn-abrir:hover { background: #2563eb; }
+
+    .loading {
+      text-align: center;
+      padding: 24px;
+      color: #94a3b8;
+    }
+    .erro {
+      text-align: center;
+      padding: 16px;
+      color: #ef4444;
+      font-size: 12px;
+    }
+    .config-msg {
+      text-align: center;
+      padding: 16px;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .config-msg code {
+      background: #f1f5f9;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+    }
   </style>
 </head>
 <body>
-  <a id="btn" class="btn" href="#" target="_blank">Abrir no Acolhimento</a>
-  <p id="hint" class="hint"></p>
+  <div id="root">
+    <div class="loading">Carregando atendimento…</div>
+  </div>
 
   <script>
     (function() {
+      var API = window.location.origin;
+      var root = document.getElementById('root');
+
       var params = {};
       window.location.search.slice(1).split('&').forEach(function(pair) {
         var i = pair.indexOf('=');
@@ -50,22 +137,113 @@
       var nome = params.nome || params.name || params.contact_name || '';
       var telefone = params.telefone || params.phone || params.contact_phone || '';
 
-      var base = window.location.origin;
-      var q = 'kommoContactId=' + encodeURIComponent(contactId) + '&nome=' + encodeURIComponent(nome) + '&telefone=' + encodeURIComponent(telefone);
-      var url = base + '/atendimento/auto?' + q;
-
-      var btn = document.getElementById('btn');
-      var hint = document.getElementById('hint');
-
-      if (contactId) {
-        btn.href = url;
-        hint.textContent = 'Abre o atendimento deste contato no sistema de acolhimento.';
-      } else {
-        btn.href = '#';
-        btn.classList.add('disabled');
-        btn.onclick = function(e) { e.preventDefault(); };
-        hint.textContent = 'Configure a URL do widget no Kommo com os parâmetros: contact_id (ou kommoContactId), nome, telefone.';
+      if (!contactId) {
+        root.innerHTML =
+          '<div class="config-msg">' +
+          'Configure a URL do widget no Kommo com os parâmetros:<br>' +
+          '<code>kommoContactId</code>, <code>nome</code>, <code>telefone</code>' +
+          '</div>';
+        return;
       }
+
+      function formatDate(iso) {
+        if (!iso) return '—';
+        return new Date(iso).toLocaleString('pt-BR');
+      }
+
+      function render(a) {
+        var isEncerrado = a.status === 'encerrado';
+        var statusClass = isEncerrado ? 'encerrado' : 'ativo';
+        var statusLabel = isEncerrado ? 'Encerrado' : 'Ativo';
+
+        var html =
+          '<div class="card">' +
+            '<div class="header">' +
+              '<span class="dot ' + statusClass + '"></span>' +
+              '<span class="titulo">' + (a.nome || 'Contato ' + a.kommoContactId) + '</span>' +
+            '</div>' +
+            '<div class="info">' +
+              '<div class="row"><span class="label">Telefone</span><span class="value">' + (a.telefone || '—') + '</span></div>' +
+              '<div class="row"><span class="label">Status</span><span class="value"><span class="status-badge ' + statusClass + '">' + statusLabel + '</span></span></div>' +
+              '<div class="row"><span class="label">Início</span><span class="value">' + formatDate(a.data_inicio) + '</span></div>' +
+              (isEncerrado ? '<div class="row"><span class="label">Encerrado</span><span class="value">' + formatDate(a.data_encerrado) + '</span></div>' : '') +
+            '</div>';
+
+        if (!isEncerrado) {
+          html += '<button class="btn btn-encerrar" id="btnEncerrar">Encerrar atendimento</button>';
+        } else {
+          html += '<button class="btn btn-reabrir" id="btnReabrir">Reabrir atendimento</button>';
+        }
+
+        html +=
+          '<a class="btn btn-abrir" href="' + API + '/atendimentos/' + a.id + '" target="_blank">Abrir ficha completa</a>' +
+          '</div>';
+
+        root.innerHTML = html;
+
+        var btnEncerrar = document.getElementById('btnEncerrar');
+        if (btnEncerrar) {
+          btnEncerrar.addEventListener('click', function() { atualizarStatus(a.id, 'encerrado'); });
+        }
+
+        var btnReabrir = document.getElementById('btnReabrir');
+        if (btnReabrir) {
+          btnReabrir.addEventListener('click', function() { atualizarStatus(a.id, 'ativo'); });
+        }
+      }
+
+      function renderErro(msg) {
+        root.innerHTML = '<div class="erro">' + msg + '</div>';
+      }
+
+      async function atualizarStatus(id, novoStatus) {
+        var btn = document.querySelector('.btn-encerrar, .btn-reabrir');
+        if (btn) { btn.disabled = true; btn.textContent = 'Atualizando…'; }
+
+        try {
+          var res = await fetch(API + '/api/atendimentos/' + id, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: novoStatus }),
+          });
+          if (!res.ok) {
+            var err = await res.json().catch(function() { return {}; });
+            alert(err.erro || 'Erro ao atualizar status.');
+            carregarAtendimento();
+            return;
+          }
+          var data = await res.json();
+          render(data);
+        } catch (e) {
+          alert('Falha na conexão com o servidor.');
+          carregarAtendimento();
+        }
+      }
+
+      async function carregarAtendimento() {
+        try {
+          var res = await fetch(API + '/api/atendimentos/auto', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              kommoContactId: contactId,
+              nome: nome,
+              telefone: telefone,
+            }),
+          });
+          if (!res.ok) {
+            var err = await res.json().catch(function() { return {}; });
+            renderErro(err.erro || 'Erro ao carregar atendimento.');
+            return;
+          }
+          var data = await res.json();
+          render(data);
+        } catch (e) {
+          renderErro('Falha na conexão. Verifique se o servidor está rodando.');
+        }
+      }
+
+      carregarAtendimento();
     })();
   </script>
 </body>
