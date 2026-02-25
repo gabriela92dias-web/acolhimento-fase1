@@ -1,0 +1,8 @@
+# Render — deploy automático
+# https://render.com
+services:
+  - type: web
+    name: acolhimento-adapta
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
