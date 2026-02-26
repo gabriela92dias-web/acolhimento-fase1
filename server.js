@@ -45,6 +45,24 @@ app.post('/api/atendimentos/auto', (req, res) => {
 });
 
 /**
+ * GET /api/atendimentos
+ * Lista todos os atendimentos. Filtros opcionais: ?status=ativo|encerrado
+ */
+app.get('/api/atendimentos', (req, res) => {
+  const { status } = req.query;
+  let lista = atendimentos;
+  if (status === 'ativo' || status === 'encerrado') {
+    lista = atendimentos.filter((a) => a.status === status);
+  }
+  res.json({
+    total: lista.length,
+    ativos: atendimentos.filter((a) => a.status === 'ativo').length,
+    encerrados: atendimentos.filter((a) => a.status === 'encerrado').length,
+    atendimentos: lista,
+  });
+});
+
+/**
  * GET /api/atendimentos/:id
  */
 app.get('/api/atendimentos/:id', (req, res) => {
@@ -79,6 +97,12 @@ app.patch('/api/atendimentos/:id', (req, res) => {
 // widget.html e index.html na raiz (para deploy sem pasta public no repo)
 app.get('/widget.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'widget.html'));
+});
+app.get('/gadget.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'gadget.html'));
+});
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acolhimento — Dashboard KPIs</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar h1 { font-size: 16px; font-weight: 700; color: #0f172a; }
+    .topbar .refresh-btn {
+      background: none;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #475569;
+    }
+    .topbar .refresh-btn:hover { background: #f8fafc; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 20px; }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .kpi-card .kpi-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .kpi-card .kpi-value {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .kpi-card .kpi-sub {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+    .kpi-value.verde { color: #16a34a; }
+    .kpi-value.cinza { color: #64748b; }
+    .kpi-value.azul { color: #2563eb; }
+
+    .section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
+    }
+    .section h2 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 14px;
+    }
+
+    .periodo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .periodo-card {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+    .periodo-card .p-label { font-size: 11px; color: #64748b; margin-bottom: 4px; }
+    .periodo-card .p-value { font-size: 24px; font-weight: 700; color: #0f172a; }
+    .periodo-card .p-detail { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+
+    .bar-chart { margin-top: 10px; }
+    .bar-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      gap: 8px;
+    }
+    .bar-label { font-size: 12px; color: #64748b; width: 80px; text-align: right; flex-shrink: 0; }
+    .bar-track { flex: 1; background: #f1f5f9; border-radius: 4px; height: 20px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; min-width: 2px; }
+    .bar-fill.ativo { background: #22c55e; }
+    .bar-fill.encerrado { background: #94a3b8; }
+    .bar-count { font-size: 12px; font-weight: 600; color: #1e293b; width: 30px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 2px solid #e2e8f0;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+    }
+    tr:hover td { background: #f8fafc; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge.ativo { background: #dcfce7; color: #16a34a; }
+    .badge.encerrado { background: #f1f5f9; color: #64748b; }
+
+    .loading { text-align: center; padding: 40px; color: #94a3b8; }
+    .empty { text-align: center; padding: 24px; color: #94a3b8; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>Dashboard — KPIs de Acolhimento</h1>
+    <button class="refresh-btn" onclick="carregar()">Atualizar</button>
+  </div>
+
+  <div class="container">
+    <div id="root">
+      <div class="loading">Carregando dados…</div>
+    </div>
+  </div>
+
+  <script>
+    var API = window.location.origin;
+
+    function formatDate(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleString('pt-BR');
+    }
+
+    function formatDateShort(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleDateString('pt-BR');
+    }
+
+    function isToday(iso) {
+      if (!iso) return false;
+      var d = new Date(iso);
+      var now = new Date();
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    }
+
+    function isThisWeek(iso) {
+      if (!iso) return false;
+      var d = new Date(iso);
+      var now = new Date();
+      var startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+      return d >= startOfWeek;
+    }
+
+    function isThisMonth(iso) {
+      if (!iso) return false;
+      var d = new Date(iso);
+      var now = new Date();
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    }
+
+    function render(data) {
+      var root = document.getElementById('root');
+      var lista = data.atendimentos || [];
+      var total = data.total || 0;
+      var ativos = data.ativos || 0;
+      var encerrados = data.encerrados || 0;
+
+      var encerradosHoje = lista.filter(function(a) { return a.status === 'encerrado' && isToday(a.data_encerrado); }).length;
+      var encerradosSemana = lista.filter(function(a) { return a.status === 'encerrado' && isThisWeek(a.data_encerrado); }).length;
+      var encerradosMes = lista.filter(function(a) { return a.status === 'encerrado' && isThisMonth(a.data_encerrado); }).length;
+      var criadosHoje = lista.filter(function(a) { return isToday(a.data_inicio); }).length;
+      var criadosSemana = lista.filter(function(a) { return isThisWeek(a.data_inicio); }).length;
+      var criadosMes = lista.filter(function(a) { return isThisMonth(a.data_inicio); }).length;
+
+      var maxBar = Math.max(ativos, encerrados, 1);
+
+      var html = '';
+
+      html +=
+        '<div class="kpi-grid">' +
+          '<div class="kpi-card"><div class="kpi-label">Total de atendimentos</div><div class="kpi-value azul">' + total + '</div></div>' +
+          '<div class="kpi-card"><div class="kpi-label">Ativos agora</div><div class="kpi-value verde">' + ativos + '</div></div>' +
+          '<div class="kpi-card"><div class="kpi-label">Encerrados</div><div class="kpi-value cinza">' + encerrados + '</div></div>' +
+          '<div class="kpi-card"><div class="kpi-label">Encerrados hoje</div><div class="kpi-value">' + encerradosHoje + '</div><div class="kpi-sub">Taxa: ' + (total > 0 ? Math.round(encerrados / total * 100) : 0) + '% do total</div></div>' +
+        '</div>';
+
+      html +=
+        '<div class="section">' +
+          '<h2>Por período</h2>' +
+          '<div class="periodo-grid">' +
+            '<div class="periodo-card"><div class="p-label">Criados hoje</div><div class="p-value">' + criadosHoje + '</div></div>' +
+            '<div class="periodo-card"><div class="p-label">Criados na semana</div><div class="p-value">' + criadosSemana + '</div></div>' +
+            '<div class="periodo-card"><div class="p-label">Criados no mês</div><div class="p-value">' + criadosMes + '</div></div>' +
+            '<div class="periodo-card"><div class="p-label">Encerrados hoje</div><div class="p-value">' + encerradosHoje + '</div></div>' +
+            '<div class="periodo-card"><div class="p-label">Encerrados na semana</div><div class="p-value">' + encerradosSemana + '</div></div>' +
+            '<div class="periodo-card"><div class="p-label">Encerrados no mês</div><div class="p-value">' + encerradosMes + '</div></div>' +
+          '</div>' +
+        '</div>';
+
+      html +=
+        '<div class="section">' +
+          '<h2>Ativos vs Encerrados</h2>' +
+          '<div class="bar-chart">' +
+            '<div class="bar-row">' +
+              '<span class="bar-label">Ativos</span>' +
+              '<div class="bar-track"><div class="bar-fill ativo" style="width:' + (ativos / maxBar * 100) + '%"></div></div>' +
+              '<span class="bar-count">' + ativos + '</span>' +
+            '</div>' +
+            '<div class="bar-row">' +
+              '<span class="bar-label">Encerrados</span>' +
+              '<div class="bar-track"><div class="bar-fill encerrado" style="width:' + (encerrados / maxBar * 100) + '%"></div></div>' +
+              '<span class="bar-count">' + encerrados + '</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      if (lista.length > 0) {
+        var recentes = lista.slice().sort(function(a, b) {
+          return new Date(b.data_inicio) - new Date(a.data_inicio);
+        }).slice(0, 20);
+
+        html +=
+          '<div class="section">' +
+            '<h2>Últimos atendimentos</h2>' +
+            '<table>' +
+              '<thead><tr><th>ID</th><th>Nome</th><th>Telefone</th><th>Status</th><th>Início</th><th>Encerrado</th></tr></thead>' +
+              '<tbody>';
+
+        recentes.forEach(function(a) {
+          html +=
+            '<tr>' +
+              '<td>' + a.id + '</td>' +
+              '<td>' + (a.nome || '—') + '</td>' +
+              '<td>' + (a.telefone || '—') + '</td>' +
+              '<td><span class="badge ' + a.status + '">' + a.status + '</span></td>' +
+              '<td>' + formatDateShort(a.data_inicio) + '</td>' +
+              '<td>' + (a.data_encerrado ? formatDate(a.data_encerrado) : '—') + '</td>' +
+            '</tr>';
+        });
+
+        html += '</tbody></table></div>';
+      } else {
+        html += '<div class="section"><div class="empty">Nenhum atendimento registrado ainda.</div></div>';
+      }
+
+      root.innerHTML = html;
+    }
+
+    async function carregar() {
+      try {
+        var res = await fetch(API + '/api/atendimentos');
+        if (!res.ok) {
+          document.getElementById('root').innerHTML = '<div class="loading">Erro ao carregar dados.</div>';
+          return;
+        }
+        var data = await res.json();
+        render(data);
+      } catch (e) {
+        document.getElementById('root').innerHTML = '<div class="loading">Falha na conexão com o servidor.</div>';
+      }
+    }
+
+    carregar();
+  </script>
+</body>
+</html>
