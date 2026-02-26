@@ -6,9 +6,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Store em memória (Fase 1)
+// Store em memória
 const atendimentos = [];
 let nextId = 1;
+
+const logs = [];
+let logId = 1;
 
 /**
  * POST /api/atendimentos/auto
@@ -144,6 +147,136 @@ app.get('/api/relatorio/agentes', (req, res) => {
   });
 });
 
+/**
+ * POST /api/webhook/kommo
+ * Recebe webhooks do Kommo (mudança de etapa, criação, atualização de leads)
+ * Formato: x-www-form-urlencoded ou JSON
+ */
+app.use('/api/webhook/kommo', express.urlencoded({ extended: true }));
+app.post('/api/webhook/kommo', (req, res) => {
+  const body = req.body || {};
+  const now = new Date().toISOString();
+
+  let eventos = [];
+
+  try {
+    const leadsData = typeof body.leads === 'string' ? JSON.parse(body.leads) : (body.leads || {});
+
+    ['add', 'update', 'status', 'delete'].forEach((tipo) => {
+      const items = leadsData[tipo] || [];
+      (Array.isArray(items) ? items : [items]).forEach((lead) => {
+        if (!lead || !lead.id) return;
+
+        const evento = {
+          id: String(logId++),
+          tipo: tipo,
+          timestamp: now,
+          leadId: String(lead.id),
+          leadNome: lead.name || '',
+          statusId: String(lead.status_id || ''),
+          statusAnteriorId: String(lead.old_status_id || ''),
+          pipelineId: String(lead.pipeline_id || ''),
+          pipelineAnteriorId: String(lead.old_pipeline_id || ''),
+          responsavelId: String(lead.responsible_user_id || ''),
+          modificadoPorId: String(lead.modified_user_id || ''),
+          preco: lead.price || '',
+          accountId: String(lead.account_id || ''),
+        };
+
+        logs.push(evento);
+        eventos.push(evento);
+      });
+    });
+  } catch (e) {
+    console.error('[Webhook] Erro ao processar:', e.message);
+  }
+
+  console.log(`[Webhook] ${eventos.length} evento(s) registrado(s)`);
+  res.status(200).json({ ok: true, registrados: eventos.length });
+});
+
+/**
+ * GET /api/logs
+ * Lista todos os logs do funil. Filtros: ?leadId=X, ?tipo=update|status|add
+ */
+app.get('/api/logs', (req, res) => {
+  const { leadId, tipo } = req.query;
+  let lista = logs;
+  if (leadId) lista = lista.filter((l) => l.leadId === leadId);
+  if (tipo) lista = lista.filter((l) => l.tipo === tipo);
+
+  res.json({
+    total: lista.length,
+    logs: lista.slice().reverse(),
+  });
+});
+
+/**
+ * GET /api/relatorio/funil
+ * Relatório do funil: tempo em cada etapa, movimentações por agente
+ */
+app.get('/api/relatorio/funil', (req, res) => {
+  const porEtapa = {};
+  const porAgente = {};
+  const porLead = {};
+
+  logs.forEach((log) => {
+    if (!porLead[log.leadId]) porLead[log.leadId] = [];
+    porLead[log.leadId].push(log);
+
+    const etapaKey = log.statusId || 'desconhecida';
+    if (!porEtapa[etapaKey]) {
+      porEtapa[etapaKey] = { statusId: etapaKey, entradas: 0, leads: new Set() };
+    }
+    porEtapa[etapaKey].entradas++;
+    porEtapa[etapaKey].leads.add(log.leadId);
+
+    const agenteKey = log.responsavelId || log.modificadoPorId || 'desconhecido';
+    if (!porAgente[agenteKey]) {
+      porAgente[agenteKey] = { agenteId: agenteKey, movimentacoes: 0, leads: new Set() };
+    }
+    porAgente[agenteKey].movimentacoes++;
+    porAgente[agenteKey].leads.add(log.leadId);
+  });
+
+  const temposPorEtapa = {};
+  Object.entries(porLead).forEach(([leadId, leadLogs]) => {
+    const sorted = leadLogs.slice().sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const etapa = sorted[i].statusId;
+      const duracao = new Date(sorted[i + 1].timestamp) - new Date(sorted[i].timestamp);
+      if (!temposPorEtapa[etapa]) temposPorEtapa[etapa] = [];
+      temposPorEtapa[etapa].push(duracao);
+    }
+  });
+
+  const etapas = Object.values(porEtapa).map((e) => {
+    const tempos = temposPorEtapa[e.statusId] || [];
+    const tempoMedio = tempos.length > 0
+      ? Math.round(tempos.reduce((s, t) => s + t, 0) / tempos.length / 1000)
+      : 0;
+    return {
+      statusId: e.statusId,
+      entradas: e.entradas,
+      leadsUnicos: e.leads.size,
+      tempoMedioSegundos: tempoMedio,
+    };
+  }).sort((a, b) => b.entradas - a.entradas);
+
+  const agentes = Object.values(porAgente).map((a) => ({
+    agenteId: a.agenteId,
+    movimentacoes: a.movimentacoes,
+    leadsUnicos: a.leads.size,
+  })).sort((a, b) => b.movimentacoes - a.movimentacoes);
+
+  res.json({
+    totalLogs: logs.length,
+    totalLeads: Object.keys(porLead).length,
+    etapas,
+    agentes,
+  });
+});
+
 // widget.html e index.html na raiz (para deploy sem pasta public no repo)
 app.get('/widget.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'widget.html'));
@@ -156,6 +289,9 @@ app.get('/dashboard', (req, res) => {
 });
 app.get('/relatorio', (req, res) => {
   res.sendFile(path.join(__dirname, 'relatorio.html'));
+});
+app.get('/funil', (req, res) => {
+  res.sendFile(path.join(__dirname, 'funil.html'));
 });
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
