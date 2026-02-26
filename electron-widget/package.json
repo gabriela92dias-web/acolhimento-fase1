@@ -1,0 +1,31 @@
+{
+  "name": "adapta-widget",
+  "version": "1.0.0",
+  "description": "Widget flutuante Adapta — Controle de turno",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win portable",
+    "build:linux": "electron-builder --linux AppImage"
+  },
+  "build": {
+    "appId": "com.adapta.widget",
+    "productName": "Adapta Widget",
+    "win": {
+      "target": "portable",
+      "icon": "icon.png"
+    },
+    "linux": {
+      "target": "AppImage"
+    },
+    "files": [
+      "main.js",
+      "widget.html",
+      "icon.png"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  }
+}

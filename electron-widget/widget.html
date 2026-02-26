@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 36px; overflow: hidden; background: transparent; }
+
+    .bar {
+      height: 36px;
+      background: #0f172a;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 10px;
+      font-family: system-ui, -apple-system, sans-serif;
+      border-bottom: 1px solid #1e293b;
+      -webkit-app-region: no-drag;
+      user-select: none;
+    }
+
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #475569; flex-shrink: 0; }
+    .dot.online { background: #22c55e; }
+    .dot.pausa { background: #f59e0b; }
+
+    .nome { font-size: 11px; color: #94a3b8; font-weight: 600; white-space: nowrap; cursor: default; }
+
+    .timer { font-size: 15px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; cursor: default; }
+    .timer.pausado { color: #f59e0b; }
+    .timer.offline { color: #475569; }
+
+    .sep { width: 1px; height: 18px; background: #334155; flex-shrink: 0; }
+
+    .links { display: flex; gap: 4px; flex: 1; }
+    .link {
+      padding: 3px 10px;
+      border-radius: 4px;
+      background: #1e293b;
+      font-size: 10px;
+      color: #94a3b8;
+      cursor: pointer;
+      border: 1px solid #334155;
+      font-weight: 500;
+      font-family: inherit;
+      transition: background 0.15s, color 0.15s;
+    }
+    .link:hover { background: #334155; color: #fff; }
+
+    .btns { display: flex; gap: 3px; }
+    .btn {
+      padding: 4px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 600;
+      color: #fff;
+      font-family: inherit;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.8; }
+    .btn-entrar { background: #22c55e; }
+    .btn-pausa { background: #f59e0b; }
+    .btn-voltar { background: #3b82f6; }
+    .btn-sair { background: #ef4444; }
+    .btn-login { background: #3b82f6; }
+    .btn-login.thiago { background: #8b5cf6; }
+
+    .login-bar { justify-content: center; gap: 8px; }
+    .login-msg { font-size: 11px; color: #64748b; cursor: default; }
+  </style>
+</head>
+<body>
+  <div class="bar" id="bar"></div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    const API = 'https://acolhimento-fase1.onrender.com';
+    const bar = document.getElementById('bar');
+
+    let agente = localStorage.getItem('adapta_agente') || '';
+    let turnoAtivo = null;
+    let emPausa = false;
+    let timerRef = null;
+
+    const LINKS = [
+      { nome: 'Kommo', url: 'https://adapta.kommo.com' },
+      { nome: 'WhatsApp', url: 'https://web.whatsapp.com' },
+      { nome: 'Shopify', url: 'https://admin.shopify.com/store/8zeh18-e1' },
+    ];
+
+    function openLink(url) { ipcRenderer.send('open-link', url); }
+
+    function calcTempoUtil(turno) {
+      if (!turno || !turno.entrada) return 0;
+      const fim = turno.saida ? new Date(turno.saida).getTime() : Date.now();
+      let total = fim - new Date(turno.entrada).getTime();
+      let pausas = 0;
+      (turno.pausas || []).forEach(p => {
+        const pFim = p.fim ? new Date(p.fim).getTime() : Date.now();
+        pausas += pFim - new Date(p.inicio).getTime();
+      });
+      return Math.max(0, Math.floor((total - pausas) / 1000));
+    }
+
+    function fmtTimer(secs) {
+      const h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60), s = secs % 60;
+      return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    async function api(method, path, body) {
+      const opts = { method, headers: { 'Content-Type': 'application/json' } };
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(API + path, opts);
+      return res.json();
+    }
+
+    function renderLogin() {
+      bar.className = 'bar login-bar';
+      bar.innerHTML =
+        '<span class="login-msg">Identifique-se:</span>' +
+        '<button class="btn btn-login" onclick="login(\'Clara\')">Clara</button>' +
+        '<button class="btn btn-login thiago" onclick="login(\'Thiago\')">Thiago</button>';
+    }
+
+    function renderBar() {
+      const dotClass = turnoAtivo ? (emPausa ? 'dot pausa' : 'dot online') : 'dot';
+      const timerClass = turnoAtivo ? (emPausa ? 'timer pausado' : 'timer') : 'timer offline';
+      const timerText = turnoAtivo ? fmtTimer(calcTempoUtil(turnoAtivo)) : '--:--:--';
+
+      let linksHtml = LINKS.map(l => '<button class="link" onclick="openLink(\'' + l.url + '\')">' + l.nome + '</button>').join('');
+
+      let btnsHtml = '';
+      if (turnoAtivo) {
+        if (emPausa) {
+          btnsHtml = '<button class="btn btn-voltar" onclick="voltar()">Voltar</button>';
+        } else {
+          btnsHtml = '<button class="btn btn-pausa" onclick="pausar()">Pausa</button>';
+        }
+        btnsHtml += '<button class="btn btn-sair" onclick="sair()">Sair</button>';
+      } else {
+        btnsHtml = '<button class="btn btn-entrar" onclick="entrar()">Entrar</button>';
+      }
+
+      bar.className = 'bar';
+      bar.innerHTML =
+        '<div class="' + dotClass + '"></div>' +
+        '<span class="nome">' + agente + '</span>' +
+        '<span class="' + timerClass + '" id="timer">' + timerText + '</span>' +
+        '<div class="sep"></div>' +
+        '<div class="links">' + linksHtml + '</div>' +
+        '<div class="btns">' + btnsHtml + '</div>';
+    }
+
+    function startTimer() {
+      if (timerRef) clearInterval(timerRef);
+      if (!turnoAtivo) return;
+      timerRef = setInterval(() => {
+        const el = document.getElementById('timer');
+        if (el && turnoAtivo) el.textContent = fmtTimer(calcTempoUtil(turnoAtivo));
+      }, 1000);
+    }
+
+    async function carregar() {
+      try {
+        const data = await api('GET', '/api/turnos?agente=' + encodeURIComponent(agente));
+        const todos = data.turnos || [];
+        turnoAtivo = todos.find(t => !t.saida && t.agente === agente) || null;
+        emPausa = turnoAtivo ? !!(turnoAtivo.pausas || []).find(p => !p.fim) : false;
+        renderBar();
+        startTimer();
+      } catch (e) {
+        renderBar();
+      }
+    }
+
+    window.login = async function(nome) {
+      agente = nome;
+      localStorage.setItem('adapta_agente', nome);
+      await api('POST', '/api/turnos/entrar', { agente });
+      await carregar();
+      LINKS.forEach(l => openLink(l.url));
+    };
+
+    window.entrar = async function() {
+      await api('POST', '/api/turnos/entrar', { agente });
+      await carregar();
+    };
+
+    window.pausar = async function() {
+      await api('POST', '/api/turnos/pausar', { agente });
+      await carregar();
+    };
+
+    window.voltar = async function() {
+      await api('POST', '/api/turnos/pausar', { agente });
+      await carregar();
+    };
+
+    window.sair = async function() {
+      await api('POST', '/api/turnos/sair', { agente });
+      await carregar();
+    };
+
+    window.openLink = openLink;
+
+    if (agente) { carregar(); } else { renderLogin(); }
+  </script>
+</body>
+</html>

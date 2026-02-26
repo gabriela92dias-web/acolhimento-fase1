@@ -362,6 +362,9 @@ app.get('/widget.html', (req, res) => {
 app.get('/gadget.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'gadget.html'));
 });
+app.get('/widget-preview.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'widget-preview.html'));
+});
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });

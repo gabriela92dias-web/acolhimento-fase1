@@ -1,1 +1,3 @@
 node_modules/
+electron-widget/node_modules/
+electron-widget/dist/
