@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arquitetura do Sistema — Adapta Acolhimento</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; padding: 40px 20px; }
+    h1 { text-align: center; font-size: 20px; margin-bottom: 8px; }
+    .subtitle { text-align: center; color: #64748b; font-size: 13px; margin-bottom: 40px; }
+
+    .diagram { max-width: 900px; margin: 0 auto; position: relative; }
+
+    .layer { margin-bottom: 32px; }
+    .layer-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #475569; font-weight: 600; margin-bottom: 10px; padding-left: 8px; }
+
+    .row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    .box {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 16px 20px;
+      text-align: center;
+      min-width: 140px;
+      position: relative;
+    }
+    .box .icon { font-size: 24px; margin-bottom: 6px; }
+    .box .name { font-size: 13px; font-weight: 700; color: #fff; }
+    .box .desc { font-size: 10px; color: #64748b; margin-top: 2px; line-height: 1.4; }
+    .box .url { font-size: 9px; color: #475569; margin-top: 6px; font-family: monospace; word-break: break-all; }
+
+    .box.primary { border-color: #2aa777; background: #0f2b1e; }
+    .box.kommo { border-color: #3b82f6; background: #0f1d2e; }
+    .box.electron { border-color: #8b5cf6; background: #1a0f2e; }
+    .box.page { border-color: #334155; }
+
+    .arrow-section { text-align: center; padding: 12px 0; }
+    .arrow { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; margin: 0 16px; }
+    .arrow .line { width: 2px; height: 20px; background: #334155; }
+    .arrow .head { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid #475569; }
+    .arrow .label { font-size: 9px; color: #64748b; white-space: nowrap; }
+    .arrow.up .head { border-top: none; border-bottom: 6px solid #475569; }
+
+    .arrow-row { display: flex; justify-content: center; gap: 60px; }
+
+    .section { background: #1e293b; border-radius: 14px; padding: 20px; margin-top: 40px; max-width: 900px; margin-left: auto; margin-right: auto; border: 1px solid #334155; }
+    .section h2 { font-size: 14px; font-weight: 700; margin-bottom: 14px; color: #fff; }
+    .section table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .section th { text-align: left; padding: 6px 10px; border-bottom: 2px solid #334155; color: #64748b; font-size: 10px; text-transform: uppercase; }
+    .section td { padding: 6px 10px; border-bottom: 1px solid #1e293b; }
+    .section td code { background: #0f172a; padding: 1px 6px; border-radius: 3px; font-size: 10px; color: #94a3b8; }
+
+    .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; }
+    .badge-auto { background: #dcfce7; color: #16a34a; }
+    .badge-manual { background: #dbeafe; color: #2563eb; }
+    .badge-get { background: #f1f5f9; color: #475569; }
+    .badge-post { background: #fef3c7; color: #d97706; }
+    .badge-patch { background: #ede9fe; color: #7c3aed; }
+  </style>
+</head>
+<body>
+  <h1>Arquitetura do Sistema</h1>
+  <div class="subtitle">Adapta — Acolhimento · Rastreamento de Funil · Controle de Turno</div>
+
+  <div class="diagram">
+
+    <div class="layer">
+      <div class="layer-title">👤 Camada do Agente (PC da Clara / Thiago)</div>
+      <div class="row">
+        <div class="box electron">
+          <div class="icon">🖥️</div>
+          <div class="name">Widget Electron</div>
+          <div class="desc">Barra flutuante no topo<br>Timer · Pausa · Sair<br>Links rápidos</div>
+          <div class="url">Adapta Widget 1.0.0.exe</div>
+        </div>
+        <div class="box page">
+          <div class="icon">🌐</div>
+          <div class="name">Central Web</div>
+          <div class="desc">Painel alternativo<br>no navegador</div>
+          <div class="url">/painel</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-section">
+      <div class="arrow-row">
+        <div class="arrow">
+          <div class="label">login · turno · pausa · sair</div>
+          <div class="line"></div>
+          <div class="head"></div>
+        </div>
+        <div class="arrow">
+          <div class="label">abre links</div>
+          <div class="line"></div>
+          <div class="head"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="layer-title">⚡ Servidor Central (Render)</div>
+      <div class="row">
+        <div class="box primary">
+          <div class="icon">🟢</div>
+          <div class="name">API Express</div>
+          <div class="desc">Atendimentos · Turnos<br>Logs · Webhooks<br>Relatórios</div>
+          <div class="url">acolhimento-fase1.onrender.com</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-section">
+      <div class="arrow-row">
+        <div class="arrow up">
+          <div class="head"></div>
+          <div class="line"></div>
+          <div class="label">webhook automático</div>
+        </div>
+        <div class="arrow">
+          <div class="label">páginas HTML</div>
+          <div class="line"></div>
+          <div class="head"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="layer-title">🔗 Integrações Externas</div>
+      <div class="row">
+        <div class="box kommo">
+          <div class="icon">💬</div>
+          <div class="name">Kommo CRM</div>
+          <div class="desc">Leads · Pipeline<br>Envia webhook quando<br>lead muda de etapa</div>
+          <div class="url">adapta.kommo.com</div>
+        </div>
+        <div class="box page">
+          <div class="icon">📱</div>
+          <div class="name">WhatsApp Web</div>
+          <div class="desc">Atendimento<br>ao cliente</div>
+          <div class="url">web.whatsapp.com</div>
+        </div>
+        <div class="box page">
+          <div class="icon">🛒</div>
+          <div class="name">Shopify</div>
+          <div class="desc">Loja · Pedidos<br>Produtos</div>
+          <div class="url">admin.shopify.com</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-section">
+      <div class="arrow">
+        <div class="label">servidas pela API</div>
+        <div class="line"></div>
+        <div class="head"></div>
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="layer-title">📊 Dashboards e Relatórios</div>
+      <div class="row">
+        <div class="box page">
+          <div class="icon">📈</div>
+          <div class="name">Dashboard</div>
+          <div class="desc">KPIs gerais<br>Ativos · Encerrados</div>
+          <div class="url">/dashboard</div>
+        </div>
+        <div class="box page">
+          <div class="icon">📊</div>
+          <div class="name">Funil</div>
+          <div class="desc">Rastreamento<br>Tempo por etapa</div>
+          <div class="url">/funil</div>
+        </div>
+        <div class="box page">
+          <div class="icon">👥</div>
+          <div class="name">Relatório Agentes</div>
+          <div class="desc">Performance<br>por agente</div>
+          <div class="url">/relatorio</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Endpoints da API</h2>
+    <table>
+      <thead><tr><th>Método</th><th>Rota</th><th>Descrição</th><th>Tipo</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-post">POST</span></td><td><code>/api/atendimentos/auto</code></td><td>Criar/retornar atendimento ativo</td><td><span class="badge badge-manual">manual</span></td></tr>
+        <tr><td><span class="badge badge-get">GET</span></td><td><code>/api/atendimentos</code></td><td>Listar todos com filtros</td><td><span class="badge badge-auto">auto</span></td></tr>
+        <tr><td><span class="badge badge-patch">PATCH</span></td><td><code>/api/atendimentos/:id</code></td><td>Encerrar ou reabrir</td><td><span class="badge badge-manual">manual</span></td></tr>
+        <tr><td><span class="badge badge-post">POST</span></td><td><code>/api/webhook/kommo</code></td><td>Recebe eventos do Kommo</td><td><span class="badge badge-auto">auto</span></td></tr>
+        <tr><td><span class="badge badge-get">GET</span></td><td><code>/api/logs</code></td><td>Todos os eventos do funil</td><td><span class="badge badge-auto">auto</span></td></tr>
+        <tr><td><span class="badge badge-get">GET</span></td><td><code>/api/relatorio/funil</code></td><td>Relatório por etapa + agente</td><td><span class="badge badge-auto">auto</span></td></tr>
+        <tr><td><span class="badge badge-get">GET</span></td><td><code>/api/relatorio/agentes</code></td><td>Relatório por agente</td><td><span class="badge badge-auto">auto</span></td></tr>
+        <tr><td><span class="badge badge-post">POST</span></td><td><code>/api/turnos/entrar</code></td><td>Iniciar turno do agente</td><td><span class="badge badge-manual">agente</span></td></tr>
+        <tr><td><span class="badge badge-post">POST</span></td><td><code>/api/turnos/pausar</code></td><td>Pausar / retomar turno</td><td><span class="badge badge-manual">agente</span></td></tr>
+        <tr><td><span class="badge badge-post">POST</span></td><td><code>/api/turnos/sair</code></td><td>Encerrar turno</td><td><span class="badge badge-manual">agente</span></td></tr>
+        <tr><td><span class="badge badge-get">GET</span></td><td><code>/api/turnos</code></td><td>Listar turnos</td><td><span class="badge badge-auto">auto</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Fluxo de Dados</h2>
+    <table>
+      <thead><tr><th>Evento</th><th>Origem</th><th>Destino</th><th>Como</th></tr></thead>
+      <tbody>
+        <tr><td>Lead muda de etapa</td><td>Kommo</td><td>API (logs)</td><td><span class="badge badge-auto">webhook automático</span></td></tr>
+        <tr><td>Lead criado</td><td>Kommo</td><td>API (logs)</td><td><span class="badge badge-auto">webhook automático</span></td></tr>
+        <tr><td>Agente inicia turno</td><td>Widget / Painel</td><td>API (turnos)</td><td><span class="badge badge-manual">1 clique</span></td></tr>
+        <tr><td>Agente faz pausa</td><td>Widget / Painel</td><td>API (turnos)</td><td><span class="badge badge-manual">1 clique</span></td></tr>
+        <tr><td>Agente encerra turno</td><td>Widget / Painel</td><td>API (turnos)</td><td><span class="badge badge-manual">1 clique</span></td></tr>
+        <tr><td>Gestor consulta KPIs</td><td>Browser</td><td>Dashboard / Funil</td><td><span class="badge badge-auto">tempo real</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>
