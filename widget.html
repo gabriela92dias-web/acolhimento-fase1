@@ -159,6 +159,8 @@
       var contactId = params.kommoContactId || params.contact_id || params.id || '';
       var nome = params.nome || params.name || params.contact_name || '';
       var telefone = params.telefone || params.phone || params.contact_phone || '';
+      var agente = params.agente || '';
+      var agenteId = params.agenteId || '';
 
       if (!contactId) {
         root.innerHTML =
@@ -220,7 +222,9 @@
             '<div class="row"><span class="label">Telefone</span><span class="value">' + (a.telefone || '—') + '</span></div>' +
             '<div class="row"><span class="label">Status</span><span class="value"><span class="status-badge ' + statusClass + '">' + statusLabel + '</span></span></div>' +
             '<div class="row"><span class="label">Início</span><span class="value">' + formatDate(a.data_inicio) + '</span></div>' +
+            (a.agente ? '<div class="row"><span class="label">Agente</span><span class="value">' + a.agente + '</span></div>' : '') +
             (isEncerrado ? '<div class="row"><span class="label">Encerrado</span><span class="value">' + formatDate(a.data_encerrado) + '</span></div>' : '') +
+            (a.encerrado_por ? '<div class="row"><span class="label">Encerrado por</span><span class="value">' + a.encerrado_por + '</span></div>' : '') +
           '</div>';
 
         if (!isEncerrado) {
@@ -262,7 +266,7 @@
           var res = await fetch(API + '/api/atendimentos/' + id, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: novoStatus }),
+            body: JSON.stringify({ status: novoStatus, agente: agente, agenteId: agenteId }),
           });
           if (!res.ok) {
             var err = await res.json().catch(function() { return {}; });
@@ -287,6 +291,8 @@
               kommoContactId: contactId,
               nome: nome,
               telefone: telefone,
+              agente: agente,
+              agenteId: agenteId,
             }),
           });
           if (!res.ok) {

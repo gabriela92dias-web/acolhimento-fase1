@@ -8,23 +8,81 @@ define(['jquery'], function ($) {
       return (settings.base_url || 'https://acolhimento-fase1.onrender.com').replace(/\/+$/, '');
     }
 
+    function getCurrentUser() {
+      var user = { id: '', name: '' };
+      try {
+        var u = AMOCRM.constant('user') || {};
+        user.id = String(u.id || '');
+        user.name = u.name || u.login || '';
+      } catch (e) {}
+      return user;
+    }
+
     function getContactData() {
       var data = { kommoContactId: '', nome: '', telefone: '' };
+
       try {
-        var card = AMOCRM.data.current_card || {};
-        data.kommoContactId = card.id || '';
-        var mc = card.main_contact || {};
-        data.nome = mc.name || card.name || '';
-        var cf = mc.custom_fields || card.custom_fields || [];
-        for (var i = 0; i < cf.length; i++) {
-          if (cf[i].code === 'PHONE') {
-            var v = cf[i].values || cf[i].enums || [];
-            if (v.length > 0) { data.telefone = v[0].value || ''; }
-            break;
+        var match = window.location.pathname.match(/\/(leads|contacts)\/detail\/(\d+)/);
+        if (match) {
+          data.kommoContactId = match[2];
+        }
+      } catch (e) {}
+
+      try {
+        var card = AMOCRM.data.current_card;
+        if (card) {
+          if (!data.kommoContactId && card.id) {
+            data.kommoContactId = String(card.id);
+          }
+
+          if (card.main_contact) {
+            data.nome = card.main_contact.name || '';
+            var cf = card.main_contact.custom_fields || [];
+            for (var i = 0; i < cf.length; i++) {
+              if (cf[i].code === 'PHONE') {
+                var v = cf[i].values || cf[i].enums || [];
+                if (v.length > 0) data.telefone = v[0].value || '';
+                break;
+              }
+            }
+          }
+
+          if (!data.nome && card.name) data.nome = card.name;
+
+          if (!data.telefone) {
+            var cf2 = card.custom_fields || [];
+            for (var j = 0; j < cf2.length; j++) {
+              if (cf2[j].code === 'PHONE') {
+                var v2 = cf2[j].values || [];
+                if (v2.length > 0) data.telefone = v2[0].value || '';
+                break;
+              }
+            }
           }
         }
       } catch (e) {}
+
+      if (!data.nome) {
+        try {
+          var $title = $('h1.lead-name, .card-entity-name, [class*="entity-name"], .js-entity-name');
+          if ($title.length > 0) data.nome = $title.first().text().trim();
+        } catch (e) {}
+      }
+
       return data;
+    }
+
+    function buildUrl(base, cd) {
+      var user = getCurrentUser();
+      var url = base + '/widget.html';
+      var params = [];
+      if (cd.kommoContactId) params.push('kommoContactId=' + encodeURIComponent(cd.kommoContactId));
+      if (cd.nome) params.push('nome=' + encodeURIComponent(cd.nome));
+      if (cd.telefone) params.push('telefone=' + encodeURIComponent(cd.telefone));
+      if (user.name) params.push('agente=' + encodeURIComponent(user.name));
+      if (user.id) params.push('agenteId=' + encodeURIComponent(user.id));
+      if (params.length > 0) url += '?' + params.join('&');
+      return url;
     }
 
     function injectFab() {
@@ -81,12 +139,7 @@ define(['jquery'], function ($) {
 
         if (!isOpen) {
           var cd = getContactData();
-          var url = base + '/widget.html';
-          if (cd.kommoContactId) {
-            url += '?kommoContactId=' + encodeURIComponent(cd.kommoContactId) +
-              '&nome=' + encodeURIComponent(cd.nome) +
-              '&telefone=' + encodeURIComponent(cd.telefone);
-          }
+          var url = buildUrl(base, cd);
           $('#acolhimento-iframe').attr('src', url);
         }
 

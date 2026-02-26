@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatório por Agente — Acolhimento</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar h1 { font-size: 16px; font-weight: 700; color: #0f172a; }
+    .topbar-actions { display: flex; gap: 8px; }
+    .topbar .btn-link {
+      background: none;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #475569;
+      text-decoration: none;
+    }
+    .topbar .btn-link:hover { background: #f8fafc; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 20px; }
+
+    .resumo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .resumo-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .resumo-card .r-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .resumo-card .r-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1;
+    }
+
+    .section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
+    }
+    .section h2 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 14px;
+    }
+
+    .agent-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .agent-card {
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+    }
+    .agent-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .agent-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: #2aa777;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .agent-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .agent-stat {
+      text-align: center;
+      padding: 8px 4px;
+      background: #fff;
+      border-radius: 8px;
+    }
+    .agent-stat .s-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .agent-stat .s-label {
+      font-size: 10px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .agent-bar {
+      margin-top: 8px;
+    }
+    .agent-bar-track {
+      width: 100%;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+    }
+    .agent-bar-fill {
+      height: 100%;
+      transition: width 0.5s ease;
+    }
+    .bar-ativo { background: #22c55e; }
+    .bar-encerrado { background: #94a3b8; }
+    .agent-bar-legend {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    .tempo-medio {
+      text-align: center;
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #e2e8f0;
+    }
+    .tempo-medio strong { color: #0f172a; font-size: 14px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 2px solid #e2e8f0;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+    }
+    tr:hover td { background: #f8fafc; }
+
+    .loading { text-align: center; padding: 40px; color: #94a3b8; }
+    .empty { text-align: center; padding: 24px; color: #94a3b8; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>Relatório por Agente</h1>
+    <div class="topbar-actions">
+      <a class="btn-link" href="/dashboard">Dashboard</a>
+      <button class="btn-link" onclick="carregar()">Atualizar</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="root">
+      <div class="loading">Carregando relatório…</div>
+    </div>
+  </div>
+
+  <script>
+    var API = window.location.origin;
+
+    function formatTempo(seg) {
+      if (!seg || seg <= 0) return '—';
+      var h = Math.floor(seg / 3600);
+      var m = Math.floor((seg % 3600) / 60);
+      var s = seg % 60;
+      if (h > 0) return h + 'h ' + m + 'min';
+      if (m > 0) return m + 'min ' + s + 's';
+      return s + 's';
+    }
+
+    function getInitials(name) {
+      if (!name) return '?';
+      var parts = name.trim().split(/\s+/);
+      if (parts.length === 1) return parts[0][0].toUpperCase();
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+
+    var cores = ['#2aa777', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+
+    function render(data) {
+      var root = document.getElementById('root');
+      var agentes = data.agentes || [];
+      var totalAtendimentos = data.totalAtendimentos || 0;
+      var totalAgentes = data.totalAgentes || 0;
+
+      var totalEncerrados = agentes.reduce(function(s, a) { return s + a.encerrados; }, 0);
+      var tempoMedioGeral = 0;
+      var tempoCount = 0;
+      agentes.forEach(function(a) {
+        if (a.tempoMedioSegundos > 0) { tempoMedioGeral += a.tempoMedioSegundos; tempoCount++; }
+      });
+      if (tempoCount > 0) tempoMedioGeral = Math.round(tempoMedioGeral / tempoCount);
+
+      var html = '';
+
+      html +=
+        '<div class="resumo-grid">' +
+          '<div class="resumo-card"><div class="r-label">Total de agentes</div><div class="r-value">' + totalAgentes + '</div></div>' +
+          '<div class="resumo-card"><div class="r-label">Total atendimentos</div><div class="r-value">' + totalAtendimentos + '</div></div>' +
+          '<div class="resumo-card"><div class="r-label">Encerrados</div><div class="r-value">' + totalEncerrados + '</div></div>' +
+          '<div class="resumo-card"><div class="r-label">Tempo médio geral</div><div class="r-value" style="font-size:20px">' + formatTempo(tempoMedioGeral) + '</div></div>' +
+        '</div>';
+
+      if (agentes.length > 0) {
+        html += '<div class="section"><h2>Desempenho por Agente</h2><div class="agent-cards">';
+
+        agentes.forEach(function(ag, idx) {
+          var cor = cores[idx % cores.length];
+          var pctEnc = ag.total > 0 ? Math.round(ag.encerrados / ag.total * 100) : 0;
+          var pctAtv = 100 - pctEnc;
+
+          html +=
+            '<div class="agent-card">' +
+              '<div class="agent-name">' +
+                '<span class="agent-avatar" style="background:' + cor + '">' + getInitials(ag.agente) + '</span>' +
+                ag.agente +
+              '</div>' +
+              '<div class="agent-stats">' +
+                '<div class="agent-stat"><div class="s-value">' + ag.total + '</div><div class="s-label">Total</div></div>' +
+                '<div class="agent-stat"><div class="s-value" style="color:#22c55e">' + ag.ativos + '</div><div class="s-label">Ativos</div></div>' +
+                '<div class="agent-stat"><div class="s-value" style="color:#64748b">' + ag.encerrados + '</div><div class="s-label">Encerrados</div></div>' +
+              '</div>' +
+              '<div class="agent-bar">' +
+                '<div class="agent-bar-track">' +
+                  '<div class="agent-bar-fill bar-encerrado" style="width:' + pctEnc + '%"></div>' +
+                  '<div class="agent-bar-fill bar-ativo" style="width:' + pctAtv + '%"></div>' +
+                '</div>' +
+                '<div class="agent-bar-legend"><span>' + pctEnc + '% encerrados</span><span>' + pctAtv + '% ativos</span></div>' +
+              '</div>' +
+              '<div class="tempo-medio">Tempo médio: <strong>' + formatTempo(ag.tempoMedioSegundos) + '</strong></div>' +
+            '</div>';
+        });
+
+        html += '</div></div>';
+
+        html +=
+          '<div class="section"><h2>Ranking</h2>' +
+          '<table><thead><tr><th>#</th><th>Agente</th><th>Total</th><th>Encerrados</th><th>Taxa</th><th>Tempo médio</th></tr></thead><tbody>';
+
+        agentes.forEach(function(ag, idx) {
+          var taxa = ag.total > 0 ? Math.round(ag.encerrados / ag.total * 100) : 0;
+          html +=
+            '<tr>' +
+              '<td>' + (idx + 1) + '</td>' +
+              '<td>' + ag.agente + '</td>' +
+              '<td>' + ag.total + '</td>' +
+              '<td>' + ag.encerrados + '</td>' +
+              '<td>' + taxa + '%</td>' +
+              '<td>' + formatTempo(ag.tempoMedioSegundos) + '</td>' +
+            '</tr>';
+        });
+
+        html += '</tbody></table></div>';
+      } else {
+        html += '<div class="section"><div class="empty">Nenhum atendimento registrado ainda.</div></div>';
+      }
+
+      root.innerHTML = html;
+    }
+
+    async function carregar() {
+      try {
+        var res = await fetch(API + '/api/relatorio/agentes');
+        if (!res.ok) {
+          document.getElementById('root').innerHTML = '<div class="loading">Erro ao carregar relatório.</div>';
+          return;
+        }
+        var data = await res.json();
+        render(data);
+      } catch (e) {
+        document.getElementById('root').innerHTML = '<div class="loading">Falha na conexão.</div>';
+      }
+    }
+
+    carregar();
+  </script>
+</body>
+</html>
