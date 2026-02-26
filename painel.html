@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Agente — Acolhimento</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #1e293b; min-height: 100vh; }
+    .topbar { background: #0f172a; color: #fff; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .topbar h1 { font-size: 15px; font-weight: 700; }
+    .topbar .agente-nome { background: #2aa777; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .stat-card { background: #fff; border-radius: 10px; padding: 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .stat-card .s-value { font-size: 28px; font-weight: 800; line-height: 1; }
+    .stat-card .s-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; margin-top: 4px; }
+    .s-verde { color: #16a34a; }
+    .s-cinza { color: #64748b; }
+
+    .section { background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 16px; }
+    .section h2 { font-size: 13px; font-weight: 700; margin-bottom: 12px; color: #0f172a; }
+
+    .atendimento-item { background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; }
+    .atendimento-item .a-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .atendimento-item .a-nome { font-weight: 700; font-size: 14px; }
+    .atendimento-item .a-tel { font-size: 11px; color: #64748b; }
+    .atendimento-item .a-tempo { font-size: 18px; font-weight: 800; color: #0f172a; text-align: center; margin: 8px 0; font-variant-numeric: tabular-nums; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .badge-ativo { background: #dcfce7; color: #16a34a; }
+    .badge-encerrado { background: #f1f5f9; color: #64748b; }
+
+    .btn { display: block; width: 100%; padding: 10px; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; }
+    .btn-encerrar { background: #ef4444; color: #fff; }
+    .btn-encerrar:hover { background: #dc2626; }
+    .btn-novo { background: #2aa777; color: #fff; margin-top: 16px; padding: 14px; font-size: 14px; border-radius: 10px; }
+    .btn-novo:hover { background: #228855; }
+    .btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+    .novo-form { display: none; background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 16px; }
+    .novo-form.open { display: block; }
+    .novo-form input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; margin-bottom: 8px; }
+    .novo-form .btn-criar { background: #2aa777; color: #fff; }
+    .novo-form .btn-cancelar { background: #f1f5f9; color: #64748b; margin-top: 6px; }
+
+    .escolha { text-align: center; padding: 40px 20px; }
+    .escolha h2 { font-size: 18px; margin-bottom: 20px; }
+    .escolha-btn { display: block; width: 100%; max-width: 300px; margin: 8px auto; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; color: #fff; }
+    .escolha-btn:first-of-type { background: #3b82f6; }
+    .escolha-btn:last-of-type { background: #8b5cf6; }
+    .escolha-btn:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    var API = window.location.origin;
+    var app = document.getElementById('app');
+    var agenteAtual = '';
+    var timers = {};
+
+    var params = {};
+    window.location.search.slice(1).split('&').forEach(function(pair) {
+      var i = pair.indexOf('=');
+      if (i > 0) params[decodeURIComponent(pair.slice(0, i))] = decodeURIComponent(pair.slice(i + 1));
+    });
+
+    if (params.agente) {
+      agenteAtual = params.agente;
+      localStorage.setItem('acolhimento_agente', agenteAtual);
+    } else {
+      agenteAtual = localStorage.getItem('acolhimento_agente') || '';
+    }
+
+    function calcTempo(inicio) {
+      var diff = Math.max(0, Math.floor((Date.now() - new Date(inicio).getTime()) / 1000));
+      var h = Math.floor(diff / 3600);
+      var m = Math.floor((diff % 3600) / 60);
+      var s = diff % 60;
+      return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function formatData(iso) {
+      return iso ? new Date(iso).toLocaleString('pt-BR') : '—';
+    }
+
+    function escolherAgente() {
+      app.innerHTML =
+        '<div class="escolha">' +
+          '<h2>Quem está atendendo?</h2>' +
+          '<button class="escolha-btn" onclick="setAgente(\'Clara\')">Clara</button>' +
+          '<button class="escolha-btn" onclick="setAgente(\'Thiago\')">Thiago</button>' +
+        '</div>';
+    }
+
+    window.setAgente = function(nome) {
+      agenteAtual = nome;
+      localStorage.setItem('acolhimento_agente', nome);
+      window.history.replaceState({}, '', '/painel?agente=' + encodeURIComponent(nome));
+      carregarPainel();
+    };
+
+    function renderPainel(dados) {
+      var lista = dados.atendimentos || [];
+      var meus = lista.filter(function(a) { return a.agente === agenteAtual; });
+      var meusAtivos = meus.filter(function(a) { return a.status === 'ativo'; });
+      var meusEncerrados = meus.filter(function(a) { return a.status === 'encerrado'; });
+
+      var html =
+        '<div class="topbar">' +
+          '<h1>Painel do Agente</h1>' +
+          '<span class="agente-nome">' + agenteAtual + '</span>' +
+        '</div>' +
+        '<div class="container">';
+
+      html +=
+        '<div class="stats">' +
+          '<div class="stat-card"><div class="s-value">' + meus.length + '</div><div class="s-label">Total</div></div>' +
+          '<div class="stat-card"><div class="s-value s-verde">' + meusAtivos.length + '</div><div class="s-label">Ativos</div></div>' +
+          '<div class="stat-card"><div class="s-value s-cinza">' + meusEncerrados.length + '</div><div class="s-label">Encerrados</div></div>' +
+        '</div>';
+
+      if (meusAtivos.length > 0) {
+        html += '<div class="section"><h2>Atendimentos Ativos</h2>';
+        meusAtivos.forEach(function(a) {
+          html +=
+            '<div class="atendimento-item">' +
+              '<div class="a-header"><span class="a-nome">' + (a.nome || 'Contato #' + a.kommoContactId) + '</span><span class="badge badge-ativo">Ativo</span></div>' +
+              '<div class="a-tel">' + (a.telefone || '—') + '</div>' +
+              '<div class="a-tempo" id="timer-' + a.id + '">' + calcTempo(a.data_inicio) + '</div>' +
+              '<button class="btn btn-encerrar" onclick="encerrar(\'' + a.id + '\')">Encerrar atendimento</button>' +
+            '</div>';
+        });
+        html += '</div>';
+      }
+
+      if (meusEncerrados.length > 0) {
+        html += '<div class="section"><h2>Encerrados Hoje</h2>';
+        meusEncerrados.slice(-5).reverse().forEach(function(a) {
+          html +=
+            '<div class="atendimento-item">' +
+              '<div class="a-header"><span class="a-nome">' + (a.nome || 'Contato #' + a.kommoContactId) + '</span><span class="badge badge-encerrado">Encerrado</span></div>' +
+              '<div class="a-tel">' + (a.telefone || '—') + ' · Encerrado: ' + formatData(a.data_encerrado) + '</div>' +
+            '</div>';
+        });
+        html += '</div>';
+      }
+
+      html +=
+        '<button class="btn btn-novo" onclick="mostrarForm()">+ Novo atendimento</button>' +
+        '<div class="novo-form" id="novoForm">' +
+          '<input id="novoNome" placeholder="Nome do contato">' +
+          '<input id="novoTel" placeholder="Telefone">' +
+          '<input id="novoId" placeholder="ID do contato Kommo (opcional)">' +
+          '<button class="btn btn-criar" onclick="criarAtendimento()">Criar</button>' +
+          '<button class="btn btn-cancelar" onclick="fecharForm()">Cancelar</button>' +
+        '</div>';
+
+      html += '</div>';
+      app.innerHTML = html;
+
+      Object.keys(timers).forEach(function(k) { clearInterval(timers[k]); });
+      timers = {};
+      meusAtivos.forEach(function(a) {
+        timers[a.id] = setInterval(function() {
+          var el = document.getElementById('timer-' + a.id);
+          if (el) el.textContent = calcTempo(a.data_inicio);
+        }, 1000);
+      });
+    }
+
+    window.mostrarForm = function() { document.getElementById('novoForm').classList.add('open'); };
+    window.fecharForm = function() { document.getElementById('novoForm').classList.remove('open'); };
+
+    window.criarAtendimento = async function() {
+      var nome = document.getElementById('novoNome').value.trim();
+      var tel = document.getElementById('novoTel').value.trim();
+      var contactId = document.getElementById('novoId').value.trim() || Date.now().toString();
+
+      try {
+        await fetch(API + '/api/atendimentos/auto', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kommoContactId: contactId, nome: nome, telefone: tel, agente: agenteAtual }),
+        });
+        carregarPainel();
+      } catch (e) { alert('Erro ao criar.'); }
+    };
+
+    window.encerrar = async function(id) {
+      try {
+        await fetch(API + '/api/atendimentos/' + id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'encerrado', agente: agenteAtual }),
+        });
+        carregarPainel();
+      } catch (e) { alert('Erro ao encerrar.'); }
+    };
+
+    async function carregarPainel() {
+      try {
+        var res = await fetch(API + '/api/atendimentos');
+        var data = await res.json();
+        renderPainel(data);
+      } catch (e) {
+        app.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8">Falha na conexão.</div>';
+      }
+    }
+
+    if (agenteAtual) {
+      carregarPainel();
+    } else {
+      escolherAgente();
+    }
+  </script>
+</body>
+</html>
