@@ -213,7 +213,15 @@
       } catch (e) { app.innerHTML = '<div class="empty">Falha na conexão.</div>'; }
     }
 
-    if (agente) { carregar(); } else { escolher(); }
+    if (agente && params.auto === '1') {
+      apiPost('/api/turnos/entrar', { agente: agente }).then(function() {
+        window.location.href = 'https://adapta.kommo.com';
+      });
+    } else if (agente) {
+      carregar();
+    } else {
+      escolher();
+    }
   </script>
 </body>
 </html>
