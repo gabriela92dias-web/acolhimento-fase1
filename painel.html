@@ -7,213 +7,206 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #1e293b; min-height: 100vh; }
-    .topbar { background: #0f172a; color: #fff; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .topbar { background: #0f172a; color: #fff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
     .topbar h1 { font-size: 15px; font-weight: 700; }
-    .topbar .agente-nome { background: #2aa777; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-    .stat-card { background: #fff; border-radius: 10px; padding: 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .stat-card .s-value { font-size: 28px; font-weight: 800; line-height: 1; }
-    .stat-card .s-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; margin-top: 4px; }
-    .s-verde { color: #16a34a; }
-    .s-cinza { color: #64748b; }
+    .topbar .badge-agente { background: #2aa777; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .topbar .badge-offline { background: #64748b; }
+    .topbar .badge-pausa { background: #f59e0b; }
+    .container { max-width: 480px; margin: 0 auto; padding: 20px; }
 
-    .section { background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 16px; }
-    .section h2 { font-size: 13px; font-weight: 700; margin-bottom: 12px; color: #0f172a; }
+    .ponto-card { background: #fff; border-radius: 14px; padding: 24px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    .ponto-status { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 8px; }
+    .ponto-timer { font-size: 36px; font-weight: 800; color: #0f172a; font-variant-numeric: tabular-nums; margin-bottom: 16px; }
+    .ponto-timer.pausado { color: #f59e0b; }
+    .ponto-hora { font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
 
-    .atendimento-item { background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; }
-    .atendimento-item .a-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .atendimento-item .a-nome { font-weight: 700; font-size: 14px; }
-    .atendimento-item .a-tel { font-size: 11px; color: #64748b; }
-    .atendimento-item .a-tempo { font-size: 18px; font-weight: 800; color: #0f172a; text-align: center; margin: 8px 0; font-variant-numeric: tabular-nums; }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
-    .badge-ativo { background: #dcfce7; color: #16a34a; }
-    .badge-encerrado { background: #f1f5f9; color: #64748b; }
+    .ponto-btns { display: flex; gap: 8px; }
+    .ponto-btn { flex: 1; padding: 14px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; color: #fff; }
+    .ponto-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-entrar { background: #22c55e; }
+    .btn-entrar:hover:not(:disabled) { background: #16a34a; }
+    .btn-pausa { background: #f59e0b; }
+    .btn-pausa:hover:not(:disabled) { background: #d97706; }
+    .btn-voltar { background: #3b82f6; }
+    .btn-voltar:hover:not(:disabled) { background: #2563eb; }
+    .btn-sair { background: #ef4444; }
+    .btn-sair:hover:not(:disabled) { background: #dc2626; }
 
-    .btn { display: block; width: 100%; padding: 10px; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; }
-    .btn-encerrar { background: #ef4444; color: #fff; }
-    .btn-encerrar:hover { background: #dc2626; }
-    .btn-novo { background: #2aa777; color: #fff; margin-top: 16px; padding: 14px; font-size: 14px; border-radius: 10px; }
-    .btn-novo:hover { background: #228855; }
-    .btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+    .section { background: #fff; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 14px; }
+    .section h3 { font-size: 12px; font-weight: 700; margin-bottom: 10px; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; }
 
-    .novo-form { display: none; background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 16px; }
-    .novo-form.open { display: block; }
-    .novo-form input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; margin-bottom: 8px; }
-    .novo-form .btn-criar { background: #2aa777; color: #fff; }
-    .novo-form .btn-cancelar { background: #f1f5f9; color: #64748b; margin-top: 6px; }
+    .turno-item { padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px; display: flex; justify-content: space-between; }
+    .turno-item:last-child { border-bottom: none; }
 
-    .escolha { text-align: center; padding: 40px 20px; }
-    .escolha h2 { font-size: 18px; margin-bottom: 20px; }
-    .escolha-btn { display: block; width: 100%; max-width: 300px; margin: 8px auto; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; color: #fff; }
-    .escolha-btn:first-of-type { background: #3b82f6; }
-    .escolha-btn:last-of-type { background: #8b5cf6; }
+    .escolha { text-align: center; padding: 60px 20px; }
+    .escolha h2 { font-size: 20px; margin-bottom: 8px; }
+    .escolha p { color: #94a3b8; font-size: 13px; margin-bottom: 24px; }
+    .escolha-btn { display: block; width: 100%; max-width: 280px; margin: 10px auto; padding: 18px; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; color: #fff; }
+    .escolha-btn.clara { background: #3b82f6; }
+    .escolha-btn.thiago { background: #8b5cf6; }
     .escolha-btn:hover { opacity: 0.9; }
+
+    .empty { text-align: center; padding: 16px; color: #94a3b8; font-size: 12px; }
   </style>
 </head>
 <body>
   <div id="app"></div>
-
   <script>
     var API = window.location.origin;
     var app = document.getElementById('app');
-    var agenteAtual = '';
-    var timers = {};
+    var agente = '';
+    var timerRef = null;
 
     var params = {};
-    window.location.search.slice(1).split('&').forEach(function(pair) {
-      var i = pair.indexOf('=');
-      if (i > 0) params[decodeURIComponent(pair.slice(0, i))] = decodeURIComponent(pair.slice(i + 1));
+    window.location.search.slice(1).split('&').forEach(function(p) {
+      var i = p.indexOf('=');
+      if (i > 0) params[decodeURIComponent(p.slice(0, i))] = decodeURIComponent(p.slice(i + 1));
     });
 
-    if (params.agente) {
-      agenteAtual = params.agente;
-      localStorage.setItem('acolhimento_agente', agenteAtual);
-    } else {
-      agenteAtual = localStorage.getItem('acolhimento_agente') || '';
-    }
+    agente = params.agente || localStorage.getItem('acolhimento_agente') || '';
 
-    function calcTempo(inicio) {
-      var diff = Math.max(0, Math.floor((Date.now() - new Date(inicio).getTime()) / 1000));
+    function formatHora(iso) { return iso ? new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'; }
+    function formatData(iso) { return iso ? new Date(iso).toLocaleString('pt-BR') : '—'; }
+
+    function calcTempo(inicio, fim) {
+      var end = fim ? new Date(fim).getTime() : Date.now();
+      var diff = Math.max(0, Math.floor((end - new Date(inicio).getTime()) / 1000));
       var h = Math.floor(diff / 3600);
       var m = Math.floor((diff % 3600) / 60);
       var s = diff % 60;
       return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
     }
 
-    function formatData(iso) {
-      return iso ? new Date(iso).toLocaleString('pt-BR') : '—';
+    function calcTempoUtil(turno) {
+      if (!turno || !turno.entrada) return 0;
+      var fim = turno.saida ? new Date(turno.saida).getTime() : Date.now();
+      var total = fim - new Date(turno.entrada).getTime();
+      var pausas = 0;
+      (turno.pausas || []).forEach(function(p) {
+        var pFim = p.fim ? new Date(p.fim).getTime() : Date.now();
+        pausas += pFim - new Date(p.inicio).getTime();
+      });
+      return Math.max(0, Math.floor((total - pausas) / 1000));
     }
 
-    function escolherAgente() {
+    function escolher() {
       app.innerHTML =
         '<div class="escolha">' +
-          '<h2>Quem está atendendo?</h2>' +
-          '<button class="escolha-btn" onclick="setAgente(\'Clara\')">Clara</button>' +
-          '<button class="escolha-btn" onclick="setAgente(\'Thiago\')">Thiago</button>' +
+          '<h2>Quem está entrando?</h2>' +
+          '<p>Selecione seu nome para iniciar o turno</p>' +
+          '<button class="escolha-btn clara" onclick="iniciar(\'Clara\')">Clara</button>' +
+          '<button class="escolha-btn thiago" onclick="iniciar(\'Thiago\')">Thiago</button>' +
         '</div>';
     }
 
-    window.setAgente = function(nome) {
-      agenteAtual = nome;
+    window.iniciar = function(nome) {
+      agente = nome;
       localStorage.setItem('acolhimento_agente', nome);
       window.history.replaceState({}, '', '/painel?agente=' + encodeURIComponent(nome));
-      carregarPainel();
+      carregar();
     };
 
-    function renderPainel(dados) {
-      var lista = dados.atendimentos || [];
-      var meus = lista.filter(function(a) { return a.agente === agenteAtual; });
-      var meusAtivos = meus.filter(function(a) { return a.status === 'ativo'; });
-      var meusEncerrados = meus.filter(function(a) { return a.status === 'encerrado'; });
+    async function apiPost(url, body) {
+      var res = await fetch(API + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      return res.json();
+    }
+
+    window.entrar = async function() { await apiPost('/api/turnos/entrar', { agente: agente }); carregar(); };
+    window.sair = async function() { await apiPost('/api/turnos/sair', { agente: agente }); carregar(); };
+    window.pausar = async function() { await apiPost('/api/turnos/pausar', { agente: agente }); carregar(); };
+
+    function render(turnosData) {
+      var turnosList = turnosData.turnos || [];
+      var ativo = turnosList.find(function(t) { return !t.saida && t.agente === agente; });
+      var emPausa = ativo && ativo.pausas.find(function(p) { return !p.fim; });
+
+      var statusLabel, statusClass, timerClass;
+      if (!ativo) { statusLabel = 'OFFLINE'; statusClass = 'badge-offline'; }
+      else if (emPausa) { statusLabel = 'EM PAUSA'; statusClass = 'badge-pausa'; timerClass = 'pausado'; }
+      else { statusLabel = 'ONLINE'; statusClass = ''; }
 
       var html =
         '<div class="topbar">' +
           '<h1>Painel do Agente</h1>' +
-          '<span class="agente-nome">' + agenteAtual + '</span>' +
+          '<span class="badge-agente ' + statusClass + '">' + agente + ' · ' + statusLabel + '</span>' +
         '</div>' +
         '<div class="container">';
 
-      html +=
-        '<div class="stats">' +
-          '<div class="stat-card"><div class="s-value">' + meus.length + '</div><div class="s-label">Total</div></div>' +
-          '<div class="stat-card"><div class="s-value s-verde">' + meusAtivos.length + '</div><div class="s-label">Ativos</div></div>' +
-          '<div class="stat-card"><div class="s-value s-cinza">' + meusEncerrados.length + '</div><div class="s-label">Encerrados</div></div>' +
-        '</div>';
+      html += '<div class="ponto-card">';
+      html += '<div class="ponto-status">' + statusLabel + '</div>';
 
-      if (meusAtivos.length > 0) {
-        html += '<div class="section"><h2>Atendimentos Ativos</h2>';
-        meusAtivos.forEach(function(a) {
-          html +=
-            '<div class="atendimento-item">' +
-              '<div class="a-header"><span class="a-nome">' + (a.nome || 'Contato #' + a.kommoContactId) + '</span><span class="badge badge-ativo">Ativo</span></div>' +
-              '<div class="a-tel">' + (a.telefone || '—') + '</div>' +
-              '<div class="a-tempo" id="timer-' + a.id + '">' + calcTempo(a.data_inicio) + '</div>' +
-              '<button class="btn btn-encerrar" onclick="encerrar(\'' + a.id + '\')">Encerrar atendimento</button>' +
-            '</div>';
+      if (ativo) {
+        var secsUtil = calcTempoUtil(ativo);
+        html += '<div class="ponto-timer ' + (timerClass || '') + '" id="pontoTimer">' + calcTempo(ativo.entrada) + '</div>';
+        html += '<div class="ponto-hora">Entrada: ' + formatHora(ativo.entrada);
+        if (ativo.pausas.length > 0) html += ' · ' + ativo.pausas.length + ' pausa(s)';
+        html += '</div>';
+
+        html += '<div class="ponto-btns">';
+        if (emPausa) {
+          html += '<button class="ponto-btn btn-voltar" onclick="pausar()">Voltar</button>';
+        } else {
+          html += '<button class="ponto-btn btn-pausa" onclick="pausar()">Pausa</button>';
+        }
+        html += '<button class="ponto-btn btn-sair" onclick="sair()">Encerrar turno</button>';
+        html += '</div>';
+      } else {
+        html += '<div class="ponto-timer">--:--:--</div>';
+        html += '<div class="ponto-hora">Nenhum turno ativo</div>';
+        html += '<div class="ponto-btns">';
+        html += '<button class="ponto-btn btn-entrar" onclick="entrar()">Iniciar turno</button>';
+        html += '</div>';
+      }
+      html += '</div>';
+
+      var historico = turnosList.filter(function(t) { return t.agente === agente && t.saida; }).slice(0, 5);
+      if (historico.length > 0) {
+        html += '<div class="section"><h3>Últimos turnos</h3>';
+        historico.forEach(function(t) {
+          var secsUtil = calcTempoUtil(t);
+          var h = Math.floor(secsUtil / 3600);
+          var m = Math.floor((secsUtil % 3600) / 60);
+          var tempo = h > 0 ? h + 'h ' + m + 'min' : m + 'min';
+          html += '<div class="turno-item"><span>' + formatData(t.entrada) + '</span><span>' + tempo + ' úteis · ' + t.pausas.length + ' pausa(s)</span></div>';
         });
         html += '</div>';
       }
 
-      if (meusEncerrados.length > 0) {
-        html += '<div class="section"><h2>Encerrados Hoje</h2>';
-        meusEncerrados.slice(-5).reverse().forEach(function(a) {
-          html +=
-            '<div class="atendimento-item">' +
-              '<div class="a-header"><span class="a-nome">' + (a.nome || 'Contato #' + a.kommoContactId) + '</span><span class="badge badge-encerrado">Encerrado</span></div>' +
-              '<div class="a-tel">' + (a.telefone || '—') + ' · Encerrado: ' + formatData(a.data_encerrado) + '</div>' +
-            '</div>';
-        });
-        html += '</div>';
-      }
+      var outroAgente = agente === 'Clara' ? 'Thiago' : 'Clara';
+      var outroOnline = turnosList.find(function(t) { return !t.saida && t.agente === outroAgente; });
+      var outroEmPausa = outroOnline && outroOnline.pausas.find(function(p) { return !p.fim; });
+      html += '<div class="section"><h3>Equipe</h3>';
+      html += '<div class="turno-item"><span>' + outroAgente + '</span><span>' +
+        (outroOnline ? (outroEmPausa ? '🟡 Em pausa' : '🟢 Online desde ' + formatHora(outroOnline.entrada)) : '⚫ Offline') +
+        '</span></div>';
+      html += '</div>';
 
-      html +=
-        '<button class="btn btn-novo" onclick="mostrarForm()">+ Novo atendimento</button>' +
-        '<div class="novo-form" id="novoForm">' +
-          '<input id="novoNome" placeholder="Nome do contato">' +
-          '<input id="novoTel" placeholder="Telefone">' +
-          '<input id="novoId" placeholder="ID do contato Kommo (opcional)">' +
-          '<button class="btn btn-criar" onclick="criarAtendimento()">Criar</button>' +
-          '<button class="btn btn-cancelar" onclick="fecharForm()">Cancelar</button>' +
-        '</div>';
-
+      html += '<div style="text-align:center;margin-top:12px"><a href="/painel" style="color:#94a3b8;font-size:11px;text-decoration:none;">Trocar agente</a></div>';
       html += '</div>';
       app.innerHTML = html;
 
-      Object.keys(timers).forEach(function(k) { clearInterval(timers[k]); });
-      timers = {};
-      meusAtivos.forEach(function(a) {
-        timers[a.id] = setInterval(function() {
-          var el = document.getElementById('timer-' + a.id);
-          if (el) el.textContent = calcTempo(a.data_inicio);
+      if (timerRef) clearInterval(timerRef);
+      if (ativo) {
+        timerRef = setInterval(function() {
+          var el = document.getElementById('pontoTimer');
+          if (el) {
+            var secs = calcTempoUtil(ativo);
+            var h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60), s = secs % 60;
+            el.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+          }
         }, 1000);
-      });
-    }
-
-    window.mostrarForm = function() { document.getElementById('novoForm').classList.add('open'); };
-    window.fecharForm = function() { document.getElementById('novoForm').classList.remove('open'); };
-
-    window.criarAtendimento = async function() {
-      var nome = document.getElementById('novoNome').value.trim();
-      var tel = document.getElementById('novoTel').value.trim();
-      var contactId = document.getElementById('novoId').value.trim() || Date.now().toString();
-
-      try {
-        await fetch(API + '/api/atendimentos/auto', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ kommoContactId: contactId, nome: nome, telefone: tel, agente: agenteAtual }),
-        });
-        carregarPainel();
-      } catch (e) { alert('Erro ao criar.'); }
-    };
-
-    window.encerrar = async function(id) {
-      try {
-        await fetch(API + '/api/atendimentos/' + id, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'encerrado', agente: agenteAtual }),
-        });
-        carregarPainel();
-      } catch (e) { alert('Erro ao encerrar.'); }
-    };
-
-    async function carregarPainel() {
-      try {
-        var res = await fetch(API + '/api/atendimentos');
-        var data = await res.json();
-        renderPainel(data);
-      } catch (e) {
-        app.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8">Falha na conexão.</div>';
       }
     }
 
-    if (agenteAtual) {
-      carregarPainel();
-    } else {
-      escolherAgente();
+    async function carregar() {
+      try {
+        var res = await fetch(API + '/api/turnos?agente=');
+        var data = await res.json();
+        render(data);
+      } catch (e) { app.innerHTML = '<div class="empty">Falha na conexão.</div>'; }
     }
+
+    if (agente) { carregar(); } else { escolher(); }
   </script>
 </body>
 </html>
