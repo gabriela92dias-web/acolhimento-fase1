@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Análise Heurística — Adapta Acolhimento</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; padding: 40px 20px; line-height: 1.6; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 22px; text-align: center; margin-bottom: 4px; }
+    .subtitle { text-align: center; color: #64748b; font-size: 13px; margin-bottom: 40px; }
+
+    .heuristica {
+      background: #1e293b;
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      border: 1px solid #334155;
+      position: relative;
+      overflow: hidden;
+    }
+    .heuristica::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+    }
+    .heuristica.ok::before { background: #22c55e; }
+    .heuristica.warn::before { background: #f59e0b; }
+    .heuristica.fail::before { background: #ef4444; }
+
+    .h-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .h-num { font-size: 11px; color: #475569; font-weight: 600; }
+    .h-title { font-size: 15px; font-weight: 700; color: #fff; }
+
+    .h-score {
+      padding: 3px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .score-ok { background: #052e16; color: #22c55e; }
+    .score-warn { background: #2e1f05; color: #f59e0b; }
+    .score-fail { background: #2e0505; color: #ef4444; }
+
+    .h-desc { font-size: 13px; color: #94a3b8; margin-bottom: 10px; }
+
+    .h-analysis { font-size: 12px; color: #cbd5e1; margin-bottom: 8px; }
+    .h-analysis strong { color: #fff; }
+
+    .h-items { list-style: none; font-size: 12px; }
+    .h-items li { padding: 3px 0; padding-left: 16px; position: relative; color: #94a3b8; }
+    .h-items li::before { content: ''; position: absolute; left: 0; top: 10px; width: 6px; height: 6px; border-radius: 50%; }
+    .h-items li.ok::before { background: #22c55e; }
+    .h-items li.warn::before { background: #f59e0b; }
+    .h-items li.fail::before { background: #ef4444; }
+    .h-items li.ok { color: #cbd5e1; }
+
+    .h-recom { background: #0f172a; border-radius: 8px; padding: 10px 14px; margin-top: 10px; font-size: 11px; color: #94a3b8; }
+    .h-recom strong { color: #f59e0b; }
+
+    .resumo {
+      background: #1e293b;
+      border-radius: 14px;
+      padding: 24px;
+      margin-top: 32px;
+      border: 1px solid #334155;
+      text-align: center;
+    }
+    .resumo h2 { font-size: 16px; margin-bottom: 16px; }
+    .nota-geral { font-size: 48px; font-weight: 800; margin-bottom: 4px; }
+    .nota-geral.ok { color: #22c55e; }
+    .nota-geral.warn { color: #f59e0b; }
+    .nota-label { font-size: 12px; color: #64748b; margin-bottom: 20px; }
+
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; text-align: left; }
+    .score-item { background: #0f172a; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+    .score-item .si-name { font-size: 11px; color: #94a3b8; }
+    .score-item .si-val { font-size: 14px; font-weight: 700; }
+    .si-val.ok { color: #22c55e; }
+    .si-val.warn { color: #f59e0b; }
+    .si-val.fail { color: #ef4444; }
+
+    .prioridades {
+      background: #1e293b;
+      border-radius: 14px;
+      padding: 24px;
+      margin-top: 16px;
+      border: 1px solid #334155;
+    }
+    .prioridades h2 { font-size: 16px; margin-bottom: 14px; }
+    .pri-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #0f172a; align-items: flex-start; }
+    .pri-item:last-child { border-bottom: none; }
+    .pri-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .pri-num.crit { background: #ef4444; color: #fff; }
+    .pri-num.imp { background: #f59e0b; color: #fff; }
+    .pri-num.nice { background: #3b82f6; color: #fff; }
+    .pri-text { font-size: 13px; }
+    .pri-text .pri-title { font-weight: 700; color: #fff; }
+    .pri-text .pri-desc { color: #94a3b8; font-size: 11px; margin-top: 2px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Análise Heurística</h1>
+  <div class="subtitle">10 Heurísticas de Nielsen aplicadas ao sistema Adapta Acolhimento</div>
+
+  <div class="heuristica ok">
+    <div class="h-header">
+      <div><div class="h-num">#1</div><div class="h-title">Visibilidade do status do sistema</div></div>
+      <span class="h-score score-ok">9/10</span>
+    </div>
+    <div class="h-desc">O sistema deve sempre manter os usuários informados sobre o que está acontecendo.</div>
+    <div class="h-analysis">O sistema <strong>informa bem</strong> o estado atual do agente e do funil.</div>
+    <ul class="h-items">
+      <li class="ok">Timer ao vivo mostra tempo de turno em tempo real</li>
+      <li class="ok">Status ONLINE / EM PAUSA / OFFLINE sempre visível no topo</li>
+      <li class="ok">Badges coloridos (verde, amarelo, cinza) comunicam estado rapidamente</li>
+      <li class="ok">Seção "Equipe" mostra status do outro agente</li>
+      <li class="warn">Webhook do Kommo não confirma visualmente que está funcionando (sem indicador "última sincronização")</li>
+    </ul>
+    <div class="h-recom"><strong>Recomendação:</strong> Adicionar indicador "Última sincronização: há X min" na página /funil para confirmar que o webhook está ativo.</div>
+  </div>
+
+  <div class="heuristica ok">
+    <div class="h-header">
+      <div><div class="h-num">#2</div><div class="h-title">Correspondência entre o sistema e o mundo real</div></div>
+      <span class="h-score score-ok">8/10</span>
+    </div>
+    <div class="h-desc">O sistema deve falar a linguagem do usuário, com palavras e conceitos familiares.</div>
+    <div class="h-analysis">A linguagem é <strong>adequada ao contexto</strong> de atendimento ao cliente.</div>
+    <ul class="h-items">
+      <li class="ok">Termos como "turno", "pausa", "encerrar" são familiares para operadores</li>
+      <li class="ok">Dashboard usa métricas simples (total, ativos, encerrados)</li>
+      <li class="ok">Ícones universais (💬📱🛒) facilitam reconhecimento dos links</li>
+      <li class="warn">IDs numéricos do Kommo aparecem no funil em vez de nomes de etapas (ex: "64381291" em vez de "Leads de Entrada")</li>
+      <li class="warn">IDs de agentes no relatório do funil em vez de nomes (ex: "8171024" em vez de "Clara")</li>
+    </ul>
+    <div class="h-recom"><strong>Recomendação:</strong> Criar mapeamento de IDs → nomes legíveis para etapas do funil e agentes do Kommo.</div>
+  </div>
+
+  <div class="heuristica warn">
+    <div class="h-header">
+      <div><div class="h-num">#3</div><div class="h-title">Controle e liberdade do usuário</div></div>
+      <span class="h-score score-warn">7/10</span>
+    </div>
+    <div class="h-desc">Usuários frequentemente escolhem funções por engano e precisam de uma "saída de emergência".</div>
+    <div class="h-analysis">O sistema oferece <strong>controle parcial</strong> — algumas ações são irreversíveis.</div>
+    <ul class="h-items">
+      <li class="ok">Botão "Pausa" e "Voltar" permitem alternar livremente</li>
+      <li class="ok">"Trocar agente" disponível no painel web</li>
+      <li class="warn">Encerrar turno não pede confirmação — clique acidental perde o registro</li>
+      <li class="warn">Não existe "desfazer" para ações (encerrar atendimento, encerrar turno)</li>
+      <li class="fail">Dados em memória — reinício do servidor perde tudo</li>
+    </ul>
+    <div class="h-recom"><strong>Recomendação:</strong> Adicionar confirmação "Tem certeza?" antes de encerrar turno. Migrar dados para banco persistente (ex: SQLite ou PostgreSQL).</div>
+  </div>
+
+  <div class="heuristica ok">
+    <div class="h-header">
+      <div><div class="h-num">#4</div><div class="h-title">Consistência e padrões</div></div>
+      <span class="h-score score-ok">8/10</span>
+    </div>
+    <div class="h-desc">Usuários não devem ter que adivinhar se palavras ou ações diferentes significam a mesma coisa.</div>
+    <div class="h-analysis">O design visual é <strong>consistente</strong> entre todas as telas.</div>
+    <ul class="h-items">
+      <li class="ok">Paleta de cores uniforme (escuro, verde para ativo, amarelo para pausa, vermelho para encerrar)</li>
+      <li class="ok">Botões seguem padrão consistente em todas as páginas</li>
+      <li class="ok">Tipografia e espaçamento uniformes</li>
+      <li class="warn">Widget Electron e Painel Web têm layouts diferentes para a mesma função</li>
+    </ul>
+    <div class="h-recom"><strong>Recomendação:</strong> Alinhar visual do widget Electron com o painel web para que a transição entre eles seja imperceptível.</div>
+  </div>
+
+  <div class="heuristica warn">
+    <div class="h-header">
+      <div><div class="h-num">#5</div><div class="h-title">Prevenção de erros</div></div>
+      <span class="h-score score-warn">5/10</span>
+    </div>
+    <div class="h-desc">Melhor do que boas mensagens de erro é um design que previna o problema.</div>
+    <div class="h-analysis">O sistema tem <strong>pouca prevenção</strong> contra erros e perda de dados.</div>
+    <ul class="h-items">
+      <li class="ok">Login obrigatório antes de acessar ferramentas impede uso anônimo</li>
+      <li class="fail">Sem confirmação para ações destrutivas (encerrar turno, encerrar atendimento)</li>
+      <li class="fail">Dados em memória — crash ou deploy perde tudo</li>
+      <li class="fail">Sem validação de turno duplicado entre Widget e Painel Web</li>
+      <li class="warn">Webhook não valida assinatura — qualquer POST é aceito</li>
+    </ul>
+    <div class="h-recom"><strong>Recomendação crítica:</strong> Persistir dados em banco. Adicionar confirmações. Validar webhooks com token secreto.</div>
+  </div>
+
+  <div class="heuristica ok">
+    <div class="h-header">
+      <div><div class="h-num">#6</div><div class="h-title">Reconhecimento em vez de memorização</div></div>
+      <span class="h-score score-ok">9/10</span>
+    </div>
+    <div class="h-desc">Minimizar a carga de memória do usuário, tornando objetos e ações visíveis.</div>
+    <div class="h-analysis">O sistema é <strong>muito intuitivo</strong> — tudo visível, sem menus ocultos.</div>
+    <ul class="h-items">
+      <li class="ok">Links das ferramentas sempre visíveis na barra (não precisa lembrar URLs)</li>
+      <li class="ok">Status do turno sempre no topo — não precisa procurar</li>
+      <li class="ok">Botões com texto claro ("Pausa", "Sair", "Entrar") em vez de ícones abstratos</li>
+      <li class="ok">Dashboard mostra números grandes e legíveis</li>
+    </ul>
+  </div>
+
+  <div class="heuristica ok">
+    <div class="h-header">
+      <div><div class="h-num">#7</div><div class="h-title">Flexibilidade e eficiência de uso</div></div>
+      <span class="h-score score-ok">8/10</span>
+    </div>
+    <div class="h-desc">Aceleradores invisíveis para experts, sem atrapalhar novatos.</div>
+    <div class="h-analysis">O sistema oferece <strong>múltiplos caminhos</strong> para a mesma tarefa.</div>
+    <ul class="h-items">
+      <li class="ok">Widget Electron (app desktop) ou Painel Web (browser) — escolha do usuário</li>
+      <li class="ok">Link com ?auto=1 inicia turno sem cliques</li>
+      <li class="ok">Links rápidos abrem ferramentas em 1 clique</li>
+      <li class="warn">Sem atalhos de teclado no widget Electron</li>
+    </ul>
+    <div class="h-recom"><strong>Recomendação:</strong> Adicionar atalhos de teclado (ex: Ctrl+P para pausa, Ctrl+S para sair).</div>
+  </div>
+
+  <div class="heuristica ok">
+    <div class="h-header">
+      <div><div class="h-num">#8</div><div class="h-title">Estética e design minimalista</div></div>
+      <span class="h-score score-ok">9/10</span>
+    </div>
+    <div class="h-desc">Diálogos não devem conter informações irrelevantes.</div>
+    <div class="h-analysis">O design é <strong>limpo e focado</strong> — sem elementos desnecessários.</div>
+    <ul class="h-items">
+      <li class="ok">Barra do widget tem apenas o essencial: nome, timer, links, botões</li>
+      <li class="ok">Tema escuro reduz distração visual</li>
+      <li class="ok">Dashboards usam hierarquia visual clara (KPIs grandes → tabelas detalhadas)</li>
+      <li class="ok">Sem propagandas, logos desnecessários ou textos excessivos</li>
+    </ul>
+  </div>
+
+  <div class="heuristica warn">
+    <div class="h-header">
+      <div><div class="h-num">#9</div><div class="h-title">Ajudar usuários a reconhecer, diagnosticar e resolver erros</div></div>
+      <span class="h-score score-warn">4/10</span>
+    </div>
+    <div class="h-desc">Mensagens de erro devem ser claras, indicar o problema e sugerir solução.</div>
+    <div class="h-analysis">O sistema tem <strong>tratamento mínimo</strong> de erros.</div>
+    <ul class="h-items">
+      <li class="warn">Erros de conexão mostram mensagem genérica ("Falha na conexão")</li>
+      <li class="fail">Sem indicação quando o servidor Render está dormindo (plano gratuito)</li>
+      <li class="fail">Webhook silenciosamente falha sem notificar ninguém</li>
+      <li class="fail">Widget Electron não mostra erro se API estiver offline</li>
+    </ul>
+    <div class="h-recom"><strong>Recomendação:</strong> Mensagens de erro específicas. Indicador "servidor acordando..." para cold start do Render. Alerta por email quando webhook falha.</div>
+  </div>
+
+  <div class="heuristica warn">
+    <div class="h-header">
+      <div><div class="h-num">#10</div><div class="h-title">Ajuda e documentação</div></div>
+      <span class="h-score score-warn">6/10</span>
+    </div>
+    <div class="h-desc">Mesmo que o sistema seja intuitivo, pode ser necessário fornecer documentação.</div>
+    <div class="h-analysis">Existe documentação técnica mas <strong>falta guia do usuário</strong>.</div>
+    <ul class="h-items">
+      <li class="ok">Página /arquitetura documenta o sistema completo</li>
+      <li class="ok">AGENTS.md documenta rotas e comandos para desenvolvedores</li>
+      <li class="ok">Página /funil mostra URL do webhook com instruções</li>
+      <li class="warn">Sem guia de uso para Clara e Thiago (onboarding)</li>
+      <li class="warn">Sem tooltips ou textos de ajuda nas interfaces</li>
+    </ul>
+    <div class="h-recom"><strong>Recomendação:</strong> Criar guia rápido de 1 página para os agentes. Adicionar tooltips nos botões do widget.</div>
+  </div>
+
+  <!-- RESUMO -->
+  <div class="resumo">
+    <h2>Resultado Geral</h2>
+    <div class="nota-geral warn">7.3</div>
+    <div class="nota-label">de 10 · Bom, com pontos de melhoria</div>
+
+    <div class="score-grid">
+      <div class="score-item"><span class="si-name">1. Visibilidade</span><span class="si-val ok">9</span></div>
+      <div class="score-item"><span class="si-name">2. Mundo real</span><span class="si-val ok">8</span></div>
+      <div class="score-item"><span class="si-name">3. Controle</span><span class="si-val warn">7</span></div>
+      <div class="score-item"><span class="si-name">4. Consistência</span><span class="si-val ok">8</span></div>
+      <div class="score-item"><span class="si-name">5. Prev. erros</span><span class="si-val fail">5</span></div>
+      <div class="score-item"><span class="si-name">6. Reconhecimento</span><span class="si-val ok">9</span></div>
+      <div class="score-item"><span class="si-name">7. Flexibilidade</span><span class="si-val ok">8</span></div>
+      <div class="score-item"><span class="si-name">8. Estética</span><span class="si-val ok">9</span></div>
+      <div class="score-item"><span class="si-name">9. Erros</span><span class="si-val fail">4</span></div>
+      <div class="score-item"><span class="si-name">10. Documentação</span><span class="si-val warn">6</span></div>
+    </div>
+  </div>
+
+  <div class="prioridades">
+    <h2>Prioridades de Melhoria</h2>
+
+    <div class="pri-item">
+      <div class="pri-num crit">1</div>
+      <div class="pri-text">
+        <div class="pri-title">Persistência de dados</div>
+        <div class="pri-desc">Migrar de memória para banco (SQLite/PostgreSQL). Sem isso, qualquer reinício do Render perde tudo. É o risco #1.</div>
+      </div>
+    </div>
+
+    <div class="pri-item">
+      <div class="pri-num crit">2</div>
+      <div class="pri-text">
+        <div class="pri-title">Confirmação de ações destrutivas</div>
+        <div class="pri-desc">Adicionar "Tem certeza?" antes de encerrar turno/atendimento. Evita perda acidental de dados.</div>
+      </div>
+    </div>
+
+    <div class="pri-item">
+      <div class="pri-num imp">3</div>
+      <div class="pri-text">
+        <div class="pri-title">Mapear IDs para nomes legíveis</div>
+        <div class="pri-desc">Traduzir IDs de etapas e agentes do Kommo para nomes humanos nos relatórios (ex: "64381291" → "Leads de Entrada").</div>
+      </div>
+    </div>
+
+    <div class="pri-item">
+      <div class="pri-num imp">4</div>
+      <div class="pri-text">
+        <div class="pri-title">Tratamento de erros e offline</div>
+        <div class="pri-desc">Mensagens claras quando servidor está acordando, webhook falha, ou conexão cai. Feedback visual para o usuário.</div>
+      </div>
+    </div>
+
+    <div class="pri-item">
+      <div class="pri-num nice">5</div>
+      <div class="pri-text">
+        <div class="pri-title">Guia de onboarding</div>
+        <div class="pri-desc">Manual rápido de 1 página para Clara e Thiago. Tooltips nas interfaces. Tutorial no primeiro acesso.</div>
+      </div>
+    </div>
+
+    <div class="pri-item">
+      <div class="pri-num nice">6</div>
+      <div class="pri-text">
+        <div class="pri-title">Segurança do webhook</div>
+        <div class="pri-desc">Validar origem do webhook com token secreto. Hoje qualquer POST é aceito — risco de dados falsos.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
