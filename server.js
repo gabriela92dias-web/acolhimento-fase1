@@ -277,7 +277,23 @@ app.get('/api/relatorio/funil', (req, res) => {
   });
 });
 
+/**
+ * GET /api/agentes
+ * Lista agentes cadastrados
+ */
+const agentes = [
+  { id: '1', nome: 'Clara' },
+  { id: '2', nome: 'Thiago' },
+];
+
+app.get('/api/agentes', (req, res) => {
+  res.json({ agentes });
+});
+
 // widget.html e index.html na raiz (para deploy sem pasta public no repo)
+app.get('/painel', (req, res) => {
+  res.sendFile(path.join(__dirname, 'painel.html'));
+});
 app.get('/widget.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'widget.html'));
 });
