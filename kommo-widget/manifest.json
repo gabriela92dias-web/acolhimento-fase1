@@ -3,20 +3,18 @@
     "name": "widget.name",
     "description": "widget.description",
     "short_description": "widget.short_description",
-    "version": "1.0.1",
+    "version": "1.0.4",
     "interface_version": 2,
     "installation": true,
-    "init_once": true,
+    "init_once": false,
     "locale": ["pt", "en"],
     "support": {
       "link": "https://acolhimento-fase1.onrender.com"
     }
   },
   "locations": [
-    "ccard-0",
-    "lcard-0",
-    "clist-0",
-    "llist-0"
+    "ccard-1",
+    "lcard-1"
   ],
   "settings": {
     "base_url": {
