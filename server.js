@@ -368,6 +368,9 @@ app.get('/widget-preview.html', (req, res) => {
 app.get('/arquitetura', (req, res) => {
   res.sendFile(path.join(__dirname, 'arquitetura.html'));
 });
+app.get('/analise', (req, res) => {
+  res.sendFile(path.join(__dirname, 'analise-heuristica.html'));
+});
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
