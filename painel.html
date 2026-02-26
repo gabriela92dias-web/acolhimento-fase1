@@ -3,50 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel do Agente — Acolhimento</title>
+  <title>Adapta — Central do Agente</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #1e293b; min-height: 100vh; }
-    .topbar { background: #0f172a; color: #fff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
-    .topbar h1 { font-size: 15px; font-weight: 700; }
-    .topbar .badge-agente { background: #2aa777; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-    .topbar .badge-offline { background: #64748b; }
-    .topbar .badge-pausa { background: #f59e0b; }
-    .container { max-width: 480px; margin: 0 auto; padding: 20px; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
 
-    .ponto-card { background: #fff; border-radius: 14px; padding: 24px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
-    .ponto-status { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 8px; }
-    .ponto-timer { font-size: 36px; font-weight: 800; color: #0f172a; font-variant-numeric: tabular-nums; margin-bottom: 16px; }
-    .ponto-timer.pausado { color: #f59e0b; }
-    .ponto-hora { font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
+    .login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+    .login-card { background: #1e293b; border-radius: 20px; padding: 40px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+    .login-card h1 { font-size: 22px; margin-bottom: 4px; color: #fff; }
+    .login-card .subtitle { color: #64748b; font-size: 13px; margin-bottom: 28px; }
+    .login-card p.hint { color: #475569; font-size: 11px; margin-top: 8px; }
+    .login-btn { display: block; width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; color: #fff; margin-bottom: 10px; transition: transform 0.15s, opacity 0.15s; }
+    .login-btn:hover { transform: scale(1.02); opacity: 0.9; }
+    .login-btn.clara { background: linear-gradient(135deg, #3b82f6, #6366f1); }
+    .login-btn.thiago { background: linear-gradient(135deg, #8b5cf6, #a855f7); }
 
-    .ponto-btns { display: flex; gap: 8px; }
-    .ponto-btn { flex: 1; padding: 14px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; color: #fff; }
-    .ponto-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-entrar { background: #22c55e; }
-    .btn-entrar:hover:not(:disabled) { background: #16a34a; }
-    .btn-pausa { background: #f59e0b; }
-    .btn-pausa:hover:not(:disabled) { background: #d97706; }
-    .btn-voltar { background: #3b82f6; }
-    .btn-voltar:hover:not(:disabled) { background: #2563eb; }
-    .btn-sair { background: #ef4444; }
-    .btn-sair:hover:not(:disabled) { background: #dc2626; }
+    .topbar { background: #1e293b; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #334155; }
+    .topbar-left { display: flex; align-items: center; gap: 10px; }
+    .topbar h1 { font-size: 14px; font-weight: 700; color: #fff; }
+    .topbar .badge { padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .badge-online { background: #22c55e; color: #fff; }
+    .badge-pausa { background: #f59e0b; color: #fff; }
+    .badge-offline { background: #475569; color: #94a3b8; }
 
-    .section { background: #fff; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 14px; }
-    .section h3 { font-size: 12px; font-weight: 700; margin-bottom: 10px; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; }
+    .main { max-width: 700px; margin: 0 auto; padding: 20px; }
 
-    .turno-item { padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px; display: flex; justify-content: space-between; }
-    .turno-item:last-child { border-bottom: none; }
+    .turno-bar { background: #1e293b; border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 12px; flex-wrap: wrap; }
+    .turno-info { display: flex; align-items: center; gap: 12px; }
+    .turno-timer { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; color: #fff; }
+    .turno-timer.pausado { color: #f59e0b; }
+    .turno-detail { font-size: 11px; color: #64748b; }
+    .turno-actions { display: flex; gap: 6px; }
+    .t-btn { padding: 8px 16px; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; color: #fff; }
+    .t-btn-pausa { background: #f59e0b; }
+    .t-btn-voltar { background: #3b82f6; }
+    .t-btn-sair { background: #ef4444; }
+    .t-btn-entrar { background: #22c55e; padding: 12px 24px; font-size: 14px; }
+    .t-btn:hover { opacity: 0.85; }
 
-    .escolha { text-align: center; padding: 60px 20px; }
-    .escolha h2 { font-size: 20px; margin-bottom: 8px; }
-    .escolha p { color: #94a3b8; font-size: 13px; margin-bottom: 24px; }
-    .escolha-btn { display: block; width: 100%; max-width: 280px; margin: 10px auto; padding: 18px; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; color: #fff; }
-    .escolha-btn.clara { background: #3b82f6; }
-    .escolha-btn.thiago { background: #8b5cf6; }
-    .escolha-btn:hover { opacity: 0.9; }
+    .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #475569; font-weight: 600; margin-bottom: 10px; }
 
-    .empty { text-align: center; padding: 16px; color: #94a3b8; font-size: 12px; }
+    .links-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 24px; }
+    .link-card { background: #1e293b; border-radius: 12px; padding: 16px; text-align: center; text-decoration: none; color: #e2e8f0; transition: transform 0.15s, background 0.15s; display: block; border: 1px solid #334155; }
+    .link-card:hover { transform: translateY(-2px); background: #334155; }
+    .link-icon { font-size: 28px; margin-bottom: 6px; }
+    .link-name { font-size: 13px; font-weight: 600; }
+    .link-desc { font-size: 10px; color: #64748b; margin-top: 2px; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 24px; }
+    .stat-card { background: #1e293b; border-radius: 10px; padding: 14px; text-align: center; border: 1px solid #334155; }
+    .stat-card .sv { font-size: 24px; font-weight: 800; color: #fff; }
+    .stat-card .sl { font-size: 10px; color: #64748b; text-transform: uppercase; margin-top: 2px; }
+
+    .equipe { background: #1e293b; border-radius: 10px; padding: 14px; margin-bottom: 24px; border: 1px solid #334155; }
+    .equipe-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; }
+
+    .footer-link { text-align: center; margin-top: 8px; }
+    .footer-link a { color: #475569; font-size: 11px; text-decoration: none; }
+    .footer-link a:hover { color: #94a3b8; }
   </style>
 </head>
 <body>
@@ -62,20 +76,9 @@
       var i = p.indexOf('=');
       if (i > 0) params[decodeURIComponent(p.slice(0, i))] = decodeURIComponent(p.slice(i + 1));
     });
-
     agente = params.agente || localStorage.getItem('acolhimento_agente') || '';
 
-    function formatHora(iso) { return iso ? new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'; }
-    function formatData(iso) { return iso ? new Date(iso).toLocaleString('pt-BR') : '—'; }
-
-    function calcTempo(inicio, fim) {
-      var end = fim ? new Date(fim).getTime() : Date.now();
-      var diff = Math.max(0, Math.floor((end - new Date(inicio).getTime()) / 1000));
-      var h = Math.floor(diff / 3600);
-      var m = Math.floor((diff % 3600) / 60);
-      var s = diff % 60;
-      return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-    }
+    function fmtHora(iso) { return iso ? new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'; }
 
     function calcTempoUtil(turno) {
       if (!turno || !turno.entrada) return 0;
@@ -89,106 +92,108 @@
       return Math.max(0, Math.floor((total - pausas) / 1000));
     }
 
-    function escolher() {
-      app.innerHTML =
-        '<div class="topbar"><h1>Acolhimento — Controle de Turno</h1></div>' +
-        '<div class="escolha">' +
-          '<h2>Identifique-se para começar</h2>' +
-          '<p>Você precisa registrar sua entrada antes de acessar o Kommo</p>' +
-          '<button class="escolha-btn clara" onclick="iniciar(\'Clara\')">Clara</button>' +
-          '<button class="escolha-btn thiago" onclick="iniciar(\'Thiago\')">Thiago</button>' +
-        '</div>';
+    function fmtTimer(secs) {
+      var h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60), s = secs % 60;
+      return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
     }
 
-    window.iniciar = async function(nome) {
+    async function apiPost(url, body) {
+      return (await fetch(API + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })).json();
+    }
+
+    function loginPage() {
+      app.innerHTML =
+        '<div class="login-page"><div class="login-card">' +
+          '<h1>Adapta</h1>' +
+          '<div class="subtitle">Central do Agente</div>' +
+          '<button class="login-btn clara" onclick="login(\'Clara\')">Entrar como Clara</button>' +
+          '<button class="login-btn thiago" onclick="login(\'Thiago\')">Entrar como Thiago</button>' +
+          '<p class="hint">Registre sua entrada antes de começar a atender</p>' +
+        '</div></div>';
+    }
+
+    window.login = async function(nome) {
       agente = nome;
       localStorage.setItem('acolhimento_agente', nome);
       window.history.replaceState({}, '', '/painel?agente=' + encodeURIComponent(nome));
       await apiPost('/api/turnos/entrar', { agente: agente });
-      window.open('https://adapta.kommo.com', '_blank');
       carregar();
     };
 
-    async function apiPost(url, body) {
-      var res = await fetch(API + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      return res.json();
-    }
-
-    window.entrar = async function() {
-      await apiPost('/api/turnos/entrar', { agente: agente });
-      window.open('https://adapta.kommo.com', '_blank');
-      carregar();
-    };
+    window.entrar = async function() { await apiPost('/api/turnos/entrar', { agente: agente }); carregar(); };
     window.sair = async function() { await apiPost('/api/turnos/sair', { agente: agente }); carregar(); };
     window.pausar = async function() { await apiPost('/api/turnos/pausar', { agente: agente }); carregar(); };
 
     function render(turnosData) {
-      var turnosList = turnosData.turnos || [];
-      var ativo = turnosList.find(function(t) { return !t.saida && t.agente === agente; });
+      var todos = turnosData.turnos || [];
+      var ativo = todos.find(function(t) { return !t.saida && t.agente === agente; });
       var emPausa = ativo && ativo.pausas.find(function(p) { return !p.fim; });
 
-      var statusLabel, statusClass, timerClass;
-      if (!ativo) { statusLabel = 'OFFLINE'; statusClass = 'badge-offline'; }
-      else if (emPausa) { statusLabel = 'EM PAUSA'; statusClass = 'badge-pausa'; timerClass = 'pausado'; }
-      else { statusLabel = 'ONLINE'; statusClass = ''; }
+      var statusLabel, badgeClass;
+      if (!ativo) { statusLabel = 'Offline'; badgeClass = 'badge-offline'; }
+      else if (emPausa) { statusLabel = 'Em pausa'; badgeClass = 'badge-pausa'; }
+      else { statusLabel = 'Online'; badgeClass = 'badge-online'; }
 
       var html =
         '<div class="topbar">' +
-          '<h1>Painel do Agente</h1>' +
-          '<span class="badge-agente ' + statusClass + '">' + agente + ' · ' + statusLabel + '</span>' +
-        '</div>' +
-        '<div class="container">';
+          '<div class="topbar-left"><h1>Adapta</h1></div>' +
+          '<span class="badge ' + badgeClass + '">' + agente + ' · ' + statusLabel + '</span>' +
+        '</div><div class="main">';
 
-      html += '<div class="ponto-card">';
-      html += '<div class="ponto-status">' + statusLabel + '</div>';
-
+      html += '<div class="turno-bar">';
       if (ativo) {
-        var secsUtil = calcTempoUtil(ativo);
-        html += '<div class="ponto-timer ' + (timerClass || '') + '" id="pontoTimer">' + calcTempo(ativo.entrada) + '</div>';
-        html += '<div class="ponto-hora">Entrada: ' + formatHora(ativo.entrada);
-        if (ativo.pausas.length > 0) html += ' · ' + ativo.pausas.length + ' pausa(s)';
-        html += '</div>';
-
-        html += '<div class="ponto-btns">';
-        if (emPausa) {
-          html += '<button class="ponto-btn btn-voltar" onclick="pausar()">Voltar</button>';
-        } else {
-          html += '<button class="ponto-btn btn-pausa" onclick="pausar()">Pausa</button>';
-        }
-        html += '<button class="ponto-btn btn-sair" onclick="sair()">Encerrar turno</button>';
-        html += '</div>';
+        html +=
+          '<div class="turno-info">' +
+            '<div class="turno-timer ' + (emPausa ? 'pausado' : '') + '" id="pontoTimer">' + fmtTimer(calcTempoUtil(ativo)) + '</div>' +
+            '<div class="turno-detail">Entrada ' + fmtHora(ativo.entrada) + (ativo.pausas.length > 0 ? ' · ' + ativo.pausas.length + ' pausa(s)' : '') + '</div>' +
+          '</div>' +
+          '<div class="turno-actions">' +
+            (emPausa
+              ? '<button class="t-btn t-btn-voltar" onclick="pausar()">Voltar</button>'
+              : '<button class="t-btn t-btn-pausa" onclick="pausar()">Pausa</button>') +
+            '<button class="t-btn t-btn-sair" onclick="sair()">Sair</button>' +
+          '</div>';
       } else {
-        html += '<div class="ponto-timer">--:--:--</div>';
-        html += '<div class="ponto-hora">Nenhum turno ativo</div>';
-        html += '<div class="ponto-btns">';
-        html += '<button class="ponto-btn btn-entrar" onclick="entrar()">Iniciar turno</button>';
-        html += '</div>';
+        html +=
+          '<div class="turno-info"><div class="turno-detail">Nenhum turno ativo</div></div>' +
+          '<div class="turno-actions"><button class="t-btn t-btn-entrar" onclick="entrar()">Iniciar turno</button></div>';
       }
       html += '</div>';
 
-      var historico = turnosList.filter(function(t) { return t.agente === agente && t.saida; }).slice(0, 5);
-      if (historico.length > 0) {
-        html += '<div class="section"><h3>Últimos turnos</h3>';
-        historico.forEach(function(t) {
-          var secsUtil = calcTempoUtil(t);
-          var h = Math.floor(secsUtil / 3600);
-          var m = Math.floor((secsUtil % 3600) / 60);
-          var tempo = h > 0 ? h + 'h ' + m + 'min' : m + 'min';
-          html += '<div class="turno-item"><span>' + formatData(t.entrada) + '</span><span>' + tempo + ' úteis · ' + t.pausas.length + ' pausa(s)</span></div>';
-        });
-        html += '</div>';
-      }
+      html += '<div class="section-title">Ferramentas</div>';
+      html += '<div class="links-grid">';
+      html += '<a class="link-card" href="https://adapta.kommo.com" target="_blank"><div class="link-icon">💬</div><div class="link-name">Kommo</div><div class="link-desc">CRM · Leads · Chat</div></a>';
+      html += '<a class="link-card" href="https://web.whatsapp.com" target="_blank"><div class="link-icon">📱</div><div class="link-name">WhatsApp Web</div><div class="link-desc">Atendimento</div></a>';
+      html += '<a class="link-card" href="https://adapta-cann.myshopify.com/admin" target="_blank"><div class="link-icon">🛒</div><div class="link-name">Shopify</div><div class="link-desc">Loja · Pedidos</div></a>';
+      html += '<a class="link-card" href="' + API + '/funil" target="_blank"><div class="link-icon">📊</div><div class="link-name">Funil</div><div class="link-desc">Rastreamento</div></a>';
+      html += '<a class="link-card" href="' + API + '/dashboard" target="_blank"><div class="link-icon">📈</div><div class="link-name">Dashboard</div><div class="link-desc">KPIs</div></a>';
+      html += '</div>';
+
+      var meusTurnos = todos.filter(function(t) { return t.agente === agente && t.saida; });
+      var totalHoje = 0;
+      meusTurnos.forEach(function(t) { totalHoje += calcTempoUtil(t); });
+      if (ativo) totalHoje += calcTempoUtil(ativo);
+      var hHoje = Math.floor(totalHoje / 3600), mHoje = Math.floor((totalHoje % 3600) / 60);
+
+      html += '<div class="section-title">Seu dia</div>';
+      html += '<div class="stats-grid">';
+      html += '<div class="stat-card"><div class="sv">' + (hHoje > 0 ? hHoje + 'h' + mHoje : mHoje + 'min') + '</div><div class="sl">Tempo útil</div></div>';
+      html += '<div class="stat-card"><div class="sv">' + (meusTurnos.length + (ativo ? 1 : 0)) + '</div><div class="sl">Turnos</div></div>';
+      var totalPausas = 0;
+      meusTurnos.forEach(function(t) { totalPausas += t.pausas.length; });
+      if (ativo) totalPausas += ativo.pausas.length;
+      html += '<div class="stat-card"><div class="sv">' + totalPausas + '</div><div class="sl">Pausas</div></div>';
+      html += '</div>';
 
       var outroAgente = agente === 'Clara' ? 'Thiago' : 'Clara';
-      var outroOnline = turnosList.find(function(t) { return !t.saida && t.agente === outroAgente; });
-      var outroEmPausa = outroOnline && outroOnline.pausas.find(function(p) { return !p.fim; });
-      html += '<div class="section"><h3>Equipe</h3>';
-      html += '<div class="turno-item"><span>' + outroAgente + '</span><span>' +
-        (outroOnline ? (outroEmPausa ? '🟡 Em pausa' : '🟢 Online desde ' + formatHora(outroOnline.entrada)) : '⚫ Offline') +
-        '</span></div>';
-      html += '</div>';
+      var outroAtivo = todos.find(function(t) { return !t.saida && t.agente === outroAgente; });
+      var outroPausa = outroAtivo && outroAtivo.pausas.find(function(p) { return !p.fim; });
+      html += '<div class="section-title">Equipe</div>';
+      html += '<div class="equipe"><div class="equipe-row"><span>' + outroAgente + '</span><span>' +
+        (outroAtivo ? (outroPausa ? '<span class="badge badge-pausa">Em pausa</span>' : '<span class="badge badge-online">Online ' + fmtHora(outroAtivo.entrada) + '</span>') : '<span class="badge badge-offline">Offline</span>') +
+        '</span></div></div>';
 
-      html += '<div style="text-align:center;margin-top:12px"><a href="/painel" style="color:#94a3b8;font-size:11px;text-decoration:none;">Trocar agente</a></div>';
+      html += '<div class="footer-link"><a href="/painel">Trocar agente</a></div>';
       html += '</div>';
       app.innerHTML = html;
 
@@ -196,11 +201,7 @@
       if (ativo) {
         timerRef = setInterval(function() {
           var el = document.getElementById('pontoTimer');
-          if (el) {
-            var secs = calcTempoUtil(ativo);
-            var h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60), s = secs % 60;
-            el.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-          }
+          if (el) el.textContent = fmtTimer(calcTempoUtil(ativo));
         }, 1000);
       }
     }
@@ -208,20 +209,16 @@
     async function carregar() {
       try {
         var res = await fetch(API + '/api/turnos?agente=');
-        var data = await res.json();
-        render(data);
-      } catch (e) { app.innerHTML = '<div class="empty">Falha na conexão.</div>'; }
+        render(await res.json());
+      } catch (e) { app.innerHTML = '<div style="text-align:center;padding:40px;color:#64748b">Falha na conexão.</div>'; }
     }
 
     if (agente && params.auto === '1') {
       apiPost('/api/turnos/entrar', { agente: agente }).then(function() {
         window.location.href = 'https://adapta.kommo.com';
       });
-    } else if (agente) {
-      carregar();
-    } else {
-      escolher();
-    }
+    } else if (agente) { carregar(); }
+    else { loginPage(); }
   </script>
 </body>
 </html>
