@@ -13,6 +13,9 @@ let nextId = 1;
 const logs = [];
 let logId = 1;
 
+const turnos = [];
+let turnoId = 1;
+
 /**
  * POST /api/atendimentos/auto
  * Recebe: { kommoContactId, nome, telefone }
@@ -278,8 +281,7 @@ app.get('/api/relatorio/funil', (req, res) => {
 });
 
 /**
- * GET /api/agentes
- * Lista agentes cadastrados
+ * Agentes e Turnos
  */
 const agentes = [
   { id: '1', nome: 'Clara' },
@@ -288,6 +290,66 @@ const agentes = [
 
 app.get('/api/agentes', (req, res) => {
   res.json({ agentes });
+});
+
+app.post('/api/turnos/entrar', (req, res) => {
+  const { agente } = req.body || {};
+  if (!agente) return res.status(400).json({ erro: 'agente é obrigatório' });
+
+  const ativo = turnos.find((t) => t.agente === agente && !t.saida);
+  if (ativo) return res.json(ativo);
+
+  const turno = {
+    id: String(turnoId++),
+    agente,
+    entrada: new Date().toISOString(),
+    saida: null,
+    pausas: [],
+  };
+  turnos.push(turno);
+  res.status(201).json(turno);
+});
+
+app.post('/api/turnos/sair', (req, res) => {
+  const { agente } = req.body || {};
+  if (!agente) return res.status(400).json({ erro: 'agente é obrigatório' });
+
+  const ativo = turnos.find((t) => t.agente === agente && !t.saida);
+  if (!ativo) return res.status(404).json({ erro: 'Nenhum turno ativo' });
+
+  const pausaAberta = ativo.pausas.find((p) => !p.fim);
+  if (pausaAberta) pausaAberta.fim = new Date().toISOString();
+
+  ativo.saida = new Date().toISOString();
+  res.json(ativo);
+});
+
+app.post('/api/turnos/pausar', (req, res) => {
+  const { agente } = req.body || {};
+  if (!agente) return res.status(400).json({ erro: 'agente é obrigatório' });
+
+  const ativo = turnos.find((t) => t.agente === agente && !t.saida);
+  if (!ativo) return res.status(404).json({ erro: 'Nenhum turno ativo' });
+
+  const pausaAberta = ativo.pausas.find((p) => !p.fim);
+  if (pausaAberta) {
+    pausaAberta.fim = new Date().toISOString();
+  } else {
+    ativo.pausas.push({ inicio: new Date().toISOString(), fim: null });
+  }
+  res.json(ativo);
+});
+
+app.get('/api/turnos', (req, res) => {
+  const { agente } = req.query;
+  let lista = turnos;
+  if (agente) lista = lista.filter((t) => t.agente === agente);
+  res.json({
+    total: lista.length,
+    online: turnos.filter((t) => !t.saida && !t.pausas.find((p) => !p.fim)).map((t) => t.agente),
+    pausados: turnos.filter((t) => !t.saida && t.pausas.find((p) => !p.fim)).map((t) => t.agente),
+    turnos: lista.slice().reverse(),
+  });
 });
 
 // widget.html e index.html na raiz (para deploy sem pasta public no repo)
