@@ -91,18 +91,21 @@
 
     function escolher() {
       app.innerHTML =
+        '<div class="topbar"><h1>Acolhimento — Controle de Turno</h1></div>' +
         '<div class="escolha">' +
-          '<h2>Quem está entrando?</h2>' +
-          '<p>Selecione seu nome para iniciar o turno</p>' +
+          '<h2>Identifique-se para começar</h2>' +
+          '<p>Você precisa registrar sua entrada antes de acessar o Kommo</p>' +
           '<button class="escolha-btn clara" onclick="iniciar(\'Clara\')">Clara</button>' +
           '<button class="escolha-btn thiago" onclick="iniciar(\'Thiago\')">Thiago</button>' +
         '</div>';
     }
 
-    window.iniciar = function(nome) {
+    window.iniciar = async function(nome) {
       agente = nome;
       localStorage.setItem('acolhimento_agente', nome);
       window.history.replaceState({}, '', '/painel?agente=' + encodeURIComponent(nome));
+      await apiPost('/api/turnos/entrar', { agente: agente });
+      window.open('https://adapta.kommo.com', '_blank');
       carregar();
     };
 
@@ -111,7 +114,11 @@
       return res.json();
     }
 
-    window.entrar = async function() { await apiPost('/api/turnos/entrar', { agente: agente }); carregar(); };
+    window.entrar = async function() {
+      await apiPost('/api/turnos/entrar', { agente: agente });
+      window.open('https://adapta.kommo.com', '_blank');
+      carregar();
+    };
     window.sair = async function() { await apiPost('/api/turnos/sair', { agente: agente }); carregar(); };
     window.pausar = async function() { await apiPost('/api/turnos/pausar', { agente: agente }); carregar(); };
 
