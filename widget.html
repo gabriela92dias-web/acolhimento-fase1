@@ -40,23 +40,48 @@
       color: #1e293b;
     }
 
+    .timer-label {
+      text-align: center;
+      font-size: 10px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+    .timer {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      padding: 4px 0 10px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .duracao-total {
+      text-align: center;
+      font-size: 11px;
+      color: #64748b;
+      padding: 4px 0 10px;
+    }
+
     .info { margin-bottom: 12px; }
     .info .row {
       display: flex;
       justify-content: space-between;
-      padding: 4px 0;
+      padding: 5px 0;
       border-bottom: 1px solid #f1f5f9;
+      font-size: 12px;
     }
     .info .row:last-child { border-bottom: none; }
     .info .label { color: #64748b; }
-    .info .value { font-weight: 500; color: #1e293b; }
+    .info .value { font-weight: 500; color: #1e293b; text-align: right; }
 
     .status-badge {
       display: inline-block;
       padding: 2px 8px;
       border-radius: 12px;
-      font-size: 11px;
-      font-weight: 600;
+      font-size: 10px;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -69,25 +94,21 @@
       padding: 10px 14px;
       border: none;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       text-align: center;
       transition: background 0.2s;
+      text-decoration: none;
     }
+    .btn + .btn { margin-top: 6px; }
     .btn-encerrar { background: #ef4444; color: #fff; }
     .btn-encerrar:hover { background: #dc2626; }
-    .btn-reabrir { background: #2a7; color: #fff; margin-top: 6px; }
+    .btn-reabrir { background: #2a7; color: #fff; }
     .btn-reabrir:hover { background: #248; }
     .btn:disabled { background: #cbd5e1; cursor: not-allowed; }
-
-    .btn-abrir {
-      background: #3b82f6;
-      color: #fff;
-      text-decoration: none;
-      margin-top: 6px;
-    }
-    .btn-abrir:hover { background: #2563eb; }
+    .btn-abrir { background: #f1f5f9; color: #475569; }
+    .btn-abrir:hover { background: #e2e8f0; }
 
     .loading {
       text-align: center;
@@ -124,6 +145,8 @@
     (function() {
       var API = window.location.origin;
       var root = document.getElementById('root');
+      var atendimentoAtual = null;
+      var timerInterval = null;
 
       var params = {};
       window.location.search.slice(1).split('&').forEach(function(pair) {
@@ -151,23 +174,54 @@
         return new Date(iso).toLocaleString('pt-BR');
       }
 
+      function calcDuracao(inicio, fim) {
+        var end = fim ? new Date(fim).getTime() : Date.now();
+        var diff = Math.max(0, Math.floor((end - new Date(inicio).getTime()) / 1000));
+        var h = Math.floor(diff / 3600);
+        var m = Math.floor((diff % 3600) / 60);
+        var s = diff % 60;
+        return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+      }
+
+      function atualizarTimer() {
+        var el = document.getElementById('wTimer');
+        if (el && atendimentoAtual && atendimentoAtual.status === 'ativo') {
+          el.textContent = calcDuracao(atendimentoAtual.data_inicio);
+        }
+      }
+
       function render(a) {
+        atendimentoAtual = a;
         var isEncerrado = a.status === 'encerrado';
         var statusClass = isEncerrado ? 'encerrado' : 'ativo';
         var statusLabel = isEncerrado ? 'Encerrado' : 'Ativo';
 
-        var html =
-          '<div class="card">' +
-            '<div class="header">' +
-              '<span class="dot ' + statusClass + '"></span>' +
-              '<span class="titulo">' + (a.nome || 'Contato ' + a.kommoContactId) + '</span>' +
-            '</div>' +
-            '<div class="info">' +
-              '<div class="row"><span class="label">Telefone</span><span class="value">' + (a.telefone || '—') + '</span></div>' +
-              '<div class="row"><span class="label">Status</span><span class="value"><span class="status-badge ' + statusClass + '">' + statusLabel + '</span></span></div>' +
-              '<div class="row"><span class="label">Início</span><span class="value">' + formatDate(a.data_inicio) + '</span></div>' +
-              (isEncerrado ? '<div class="row"><span class="label">Encerrado</span><span class="value">' + formatDate(a.data_encerrado) + '</span></div>' : '') +
-            '</div>';
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+
+        var html = '<div class="card">';
+
+        html +=
+          '<div class="header">' +
+            '<span class="dot ' + statusClass + '"></span>' +
+            '<span class="titulo">' + (a.nome || 'Contato ' + a.kommoContactId) + '</span>' +
+          '</div>';
+
+        if (!isEncerrado) {
+          html +=
+            '<div class="timer-label">Tempo de atendimento</div>' +
+            '<div class="timer" id="wTimer">' + calcDuracao(a.data_inicio) + '</div>';
+        } else {
+          html +=
+            '<div class="duracao-total">Duração total: ' + calcDuracao(a.data_inicio, a.data_encerrado) + '</div>';
+        }
+
+        html +=
+          '<div class="info">' +
+            '<div class="row"><span class="label">Telefone</span><span class="value">' + (a.telefone || '—') + '</span></div>' +
+            '<div class="row"><span class="label">Status</span><span class="value"><span class="status-badge ' + statusClass + '">' + statusLabel + '</span></span></div>' +
+            '<div class="row"><span class="label">Início</span><span class="value">' + formatDate(a.data_inicio) + '</span></div>' +
+            (isEncerrado ? '<div class="row"><span class="label">Encerrado</span><span class="value">' + formatDate(a.data_encerrado) + '</span></div>' : '') +
+          '</div>';
 
         if (!isEncerrado) {
           html += '<button class="btn btn-encerrar" id="btnEncerrar">Encerrar atendimento</button>';
@@ -180,6 +234,10 @@
           '</div>';
 
         root.innerHTML = html;
+
+        if (!isEncerrado) {
+          timerInterval = setInterval(atualizarTimer, 1000);
+        }
 
         var btnEncerrar = document.getElementById('btnEncerrar');
         if (btnEncerrar) {
