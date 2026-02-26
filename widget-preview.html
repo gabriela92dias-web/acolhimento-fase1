@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview — Widget Flutuante</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #1e293b; display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; padding: 40px; min-height: 100vh; align-items: flex-start; }
+    h2 { width: 100%; text-align: center; color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: -20px; }
+    .label { width: 100%; text-align: center; color: #64748b; font-size: 11px; margin-top: -30px; margin-bottom: 10px; }
+
+    /* === OPÇÃO A: Compacto horizontal === */
+    .opt-a {
+      background: #0f172a;
+      border-radius: 16px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      border: 1px solid #334155;
+      min-width: 340px;
+    }
+    .opt-a .dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
+    .opt-a .dot.pausa { background: #f59e0b; }
+    .opt-a .nome { font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; }
+    .opt-a .timer { font-size: 20px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; flex: 1; text-align: center; }
+    .opt-a .btns { display: flex; gap: 4px; }
+    .opt-a .btn { width: 32px; height: 32px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+    .opt-a .btn-pausa { background: #f59e0b; }
+    .opt-a .btn-sair { background: #ef4444; }
+    .opt-a .btn-links { background: #334155; color: #94a3b8; font-size: 12px; }
+
+    /* === OPÇÃO B: Mini vertical === */
+    .opt-b {
+      background: #0f172a;
+      border-radius: 14px;
+      padding: 14px;
+      width: 160px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      border: 1px solid #334155;
+    }
+    .opt-b .nome { font-size: 11px; color: #94a3b8; font-weight: 600; margin-bottom: 4px; }
+    .opt-b .status { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px; }
+    .opt-b .status .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+    .opt-b .status span { font-size: 10px; color: #22c55e; font-weight: 600; text-transform: uppercase; }
+    .opt-b .timer { font-size: 28px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; margin-bottom: 10px; }
+    .opt-b .btns { display: flex; gap: 4px; }
+    .opt-b .btn { flex: 1; padding: 8px; border: none; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600; color: #fff; }
+    .opt-b .btn-pausa { background: #f59e0b; }
+    .opt-b .btn-sair { background: #ef4444; }
+    .opt-b .links { display: flex; justify-content: center; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #1e293b; }
+    .opt-b .link-ico { width: 28px; height: 28px; border-radius: 6px; background: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; border: 1px solid #334155; }
+    .opt-b .link-ico:hover { background: #334155; }
+
+    /* === OPÇÃO C: Barra fina no topo === */
+    .opt-c {
+      background: #0f172a;
+      border-radius: 0 0 12px 12px;
+      padding: 6px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      width: 420px;
+      border: 1px solid #334155;
+      border-top: none;
+    }
+    .opt-c .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+    .opt-c .nome { font-size: 11px; color: #94a3b8; font-weight: 600; }
+    .opt-c .timer { font-size: 16px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
+    .opt-c .sep { width: 1px; height: 18px; background: #334155; }
+    .opt-c .links { display: flex; gap: 6px; flex: 1; }
+    .opt-c .link-pill { padding: 3px 8px; border-radius: 4px; background: #1e293b; font-size: 10px; color: #94a3b8; cursor: pointer; border: 1px solid #334155; text-decoration: none; font-weight: 500; }
+    .opt-c .link-pill:hover { background: #334155; color: #fff; }
+    .opt-c .btns { display: flex; gap: 3px; }
+    .opt-c .btn { padding: 4px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 600; color: #fff; }
+    .opt-c .btn-pausa { background: #f59e0b; }
+    .opt-c .btn-sair { background: #ef4444; }
+
+    /* === OPÇÃO D: Círculo com expansão === */
+    .opt-d-wrap { position: relative; width: 200px; height: 180px; }
+    .opt-d-circle {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(34,197,94,0.3);
+      cursor: pointer;
+      position: absolute; right: 0; top: 0;
+    }
+    .opt-d-circle .timer { font-size: 14px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
+    .opt-d-circle .nome { font-size: 8px; color: rgba(255,255,255,0.7); font-weight: 600; }
+    .opt-d-expanded {
+      position: absolute; right: 0; top: 72px;
+      background: #0f172a;
+      border-radius: 12px;
+      padding: 12px;
+      width: 180px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      border: 1px solid #334155;
+    }
+    .opt-d-expanded .links { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+    .opt-d-expanded .link-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; background: #1e293b; cursor: pointer; text-decoration: none; color: #e2e8f0; font-size: 12px; }
+    .opt-d-expanded .link-row:hover { background: #334155; }
+    .opt-d-expanded .link-row .ico { font-size: 14px; }
+    .opt-d-expanded .btns { display: flex; gap: 4px; }
+    .opt-d-expanded .btn { flex: 1; padding: 6px; border: none; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 600; color: #fff; }
+    .opt-d-expanded .btn-pausa { background: #f59e0b; }
+    .opt-d-expanded .btn-sair { background: #ef4444; }
+  </style>
+</head>
+<body>
+
+  <h2>Opção A — Barra compacta horizontal</h2>
+  <div class="label">Fica na parte inferior da tela, discreto</div>
+  <div class="opt-a">
+    <div class="dot"></div>
+    <div class="nome">Clara</div>
+    <div class="timer">02:34:17</div>
+    <div class="btns">
+      <button class="btn btn-links">☰</button>
+      <button class="btn btn-pausa">⏸</button>
+      <button class="btn btn-sair">⏹</button>
+    </div>
+  </div>
+
+  <h2>Opção B — Card vertical</h2>
+  <div class="label">Fica no canto da tela, com links de atalho</div>
+  <div class="opt-b">
+    <div class="nome">Clara</div>
+    <div class="status"><div class="dot"></div><span>Online</span></div>
+    <div class="timer">02:34:17</div>
+    <div class="btns">
+      <button class="btn btn-pausa">Pausa</button>
+      <button class="btn btn-sair">Sair</button>
+    </div>
+    <div class="links">
+      <div class="link-ico" title="Kommo">💬</div>
+      <div class="link-ico" title="WhatsApp">📱</div>
+      <div class="link-ico" title="Shopify">🛒</div>
+      <div class="link-ico" title="Dashboard">📊</div>
+    </div>
+  </div>
+
+  <h2>Opção C — Barra fina no topo</h2>
+  <div class="label">Gruda no topo da tela, tudo em uma linha</div>
+  <div class="opt-c">
+    <div class="dot"></div>
+    <div class="nome">Clara</div>
+    <div class="timer">02:34:17</div>
+    <div class="sep"></div>
+    <div class="links">
+      <a class="link-pill">Kommo</a>
+      <a class="link-pill">WhatsApp</a>
+      <a class="link-pill">Shopify</a>
+    </div>
+    <div class="btns">
+      <button class="btn btn-pausa">Pausa</button>
+      <button class="btn btn-sair">Sair</button>
+    </div>
+  </div>
+
+  <h2>Opção D — Bolinha com menu expansível</h2>
+  <div class="label">Bolinha flutuante, clica pra expandir</div>
+  <div class="opt-d-wrap">
+    <div class="opt-d-circle">
+      <div class="timer">2:34</div>
+      <div class="nome">Clara</div>
+    </div>
+    <div class="opt-d-expanded">
+      <div class="links">
+        <a class="link-row"><span class="ico">💬</span> Kommo</a>
+        <a class="link-row"><span class="ico">📱</span> WhatsApp</a>
+        <a class="link-row"><span class="ico">🛒</span> Shopify</a>
+      </div>
+      <div class="btns">
+        <button class="btn btn-pausa">Pausa</button>
+        <button class="btn btn-sair">Sair</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
