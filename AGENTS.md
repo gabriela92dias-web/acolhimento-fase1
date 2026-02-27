@@ -4,7 +4,7 @@
 
 ### Overview
 
-**Acolhimento** is a single-service Node.js/Express application for customer intake management, integrated with Kommo CRM. It uses in-memory storage (no database required). Deployed to Render at `https://acolhimento-fase1.onrender.com`.
+**Acolhimento** is a single-service Node.js/Express application for customer intake management, integrated with Kommo CRM. It uses SQLite (`better-sqlite3`) with a local `data.db` file (auto-created on startup; tables are created automatically). Deployed to Render at `https://acolhimento-fase1.onrender.com`.
 
 ### Running the application
 
@@ -34,7 +34,8 @@ The `kommo-widget/` directory contains the Kommo Widget SDK package. The pre-bui
 ### Notes
 
 - No linter, test framework, or build step is configured. `package.json` only has `start` and `dev` scripts (both run `node server.js`).
-- Data is stored in-memory and is lost on server restart.
+- Data is stored in SQLite (`data.db`). The `better-sqlite3` package requires native C++ compilation; `build-essential` and `python3` must be available for `npm install`.
+- `DB_PATH` env var can override the default database file location.
 - `package-lock.json` is committed; run `npm install` to restore dependencies.
 - The frontend is vanilla HTML/JS served directly by Express — no transpilation or bundling needed.
 - All widget/gadget pages accept query params: `kommoContactId`, `nome`, `telefone` (also `contact_id`, `name`, `phone` aliases).
