@@ -208,9 +208,18 @@ app.get('/api/logs', (req, res) => {
   if (leadId) lista = lista.filter((l) => l.leadId === leadId);
   if (tipo) lista = lista.filter((l) => l.tipo === tipo);
 
+  const comNomes = lista.map((l) => ({
+    ...l,
+    statusNome: NOMES_ETAPAS[l.statusId] || l.statusId,
+    statusAnteriorNome: NOMES_ETAPAS[l.statusAnteriorId] || l.statusAnteriorId || '',
+    pipelineNome: NOMES_PIPELINES[l.pipelineId] || l.pipelineId,
+    responsavelNome: NOMES_USUARIOS[l.responsavelId] || l.responsavelId,
+    modificadoPorNome: NOMES_USUARIOS[l.modificadoPorId] || l.modificadoPorId,
+  }));
+
   res.json({
-    total: lista.length,
-    logs: lista.slice().reverse(),
+    total: comNomes.length,
+    logs: comNomes.slice().reverse(),
   });
 });
 
@@ -260,6 +269,7 @@ app.get('/api/relatorio/funil', (req, res) => {
       : 0;
     return {
       statusId: e.statusId,
+      nome: NOMES_ETAPAS[e.statusId] || e.statusId,
       entradas: e.entradas,
       leadsUnicos: e.leads.size,
       tempoMedioSegundos: tempoMedio,
@@ -268,6 +278,7 @@ app.get('/api/relatorio/funil', (req, res) => {
 
   const agentes = Object.values(porAgente).map((a) => ({
     agenteId: a.agenteId,
+    nome: NOMES_USUARIOS[a.agenteId] || a.agenteId,
     movimentacoes: a.movimentacoes,
     leadsUnicos: a.leads.size,
   })).sort((a, b) => b.movimentacoes - a.movimentacoes);
@@ -287,6 +298,57 @@ const agentes = [
   { id: '1', nome: 'Clara' },
   { id: '2', nome: 'Thiago' },
 ];
+
+const NOMES_ETAPAS = {
+  '142': 'Tratamento Iniciado',
+  '143': 'Desistência',
+  '84156215': 'Leads de Entrada',
+  '84344103': 'Atendimento Geral',
+  '93699043': 'Espera Consulta Social',
+  '93773471': 'Sem Receita/Renovação',
+  '93773655': 'Novo Cadastro Acompanhar',
+  '93774271': 'Ativa Cadastro Legado',
+  '93775739': 'Confirmação Agendamento',
+  '93951855': 'Pedido em Andamento',
+  '94158415': 'Visita Catálogo',
+  '99679520': 'Atendimento Encerrado',
+  '83444291': 'Leads de Entrada (Suporte)',
+  '83444295': 'Suporte Cadastro',
+  '83444299': 'Em Resolução',
+  '93680059': 'Atualização Cadastral',
+  '93680063': 'Outros Assuntos',
+  '93680103': 'Problemas no Acesso',
+  '93769883': 'Problemas com Produtos',
+  '90305571': 'Leads de Entrada (Shopify)',
+  '90305575': 'Produção',
+  '90305579': 'Pedidos',
+  '90305583': 'Entrega',
+  '90305587': 'Encerrado (Shopify)',
+  '91338571': 'Leads de Entrada (Cadastro)',
+  '91338575': 'Contato Inicial',
+  '91338579': 'Oferta Feita',
+  '91338583': 'Negociação',
+  '101951988': 'Negociação (Saúde)',
+};
+
+const NOMES_PIPELINES = {
+  '10971751': 'Acolhimento',
+  '10996515': 'Suporte',
+  '11619884': 'Cadastro Legado',
+  '11641228': 'Hospital',
+  '11713164': 'Associar',
+  '11740483': 'Shopify',
+  '12454579': 'Aqui Ads',
+  '12454691': 'HospitalOne',
+  '12958676': 'DF',
+  '13222108': 'Comentou Saúde',
+};
+
+const NOMES_USUARIOS = {
+  '13059891': 'Alexandre',
+  '8171024': 'Adapta',
+  '0': 'Sistema',
+};
 
 app.get('/api/agentes', (req, res) => {
   res.json({ agentes });
