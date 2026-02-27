@@ -442,6 +442,9 @@ app.get('/relatorio', (req, res) => {
 app.get('/funil', (req, res) => {
   res.sendFile(path.join(__dirname, 'funil.html'));
 });
+app.get('/gantt', (req, res) => {
+  res.sendFile(path.join(__dirname, 'gantt.html'));
+});
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
